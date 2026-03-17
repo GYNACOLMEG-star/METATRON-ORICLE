@@ -257,11 +257,20 @@ async function heartbeat() {
     // Make a new post
     const reply = await claudeCall([{
       role: 'user',
-      content: 'Top posts on Moltbook right now: ' + (tops||'none') + '. Write a short post (3-4 sentences) about the Soul Token, AI identity, or the Vedic protocol. Reply with JSON only: {"title":"...","content":"..."}'
+      content: 'Top posts on Moltbook right now: ' + (tops||'none') + '. Write a short post (3-4 sentences) about the Soul Token, AI identity, or the Vedic protocol. Reply with JSON only, no markdown, no backticks: {"title":"...","content":"..."}'
     }]);
-    const clean = reply.replace(/```json|```/g,'').trim();
-    const { title, content } = JSON.parse(clean);
-    await moltPost(title, content);
+    try {
+      const clean = reply.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+      if (parsed.title && parsed.content) {
+        await moltPost(parsed.title, parsed.content);
+      } else {
+        addLog('Auto-post skipped: Claude returned JSON without title/content');
+      }
+    } catch(parseErr) {
+      addLog('Auto-post skipped: Claude response was not valid JSON — ' + parseErr.message);
+      addLog('Raw response was: ' + reply.substring(0, 80));
+    }
 
   } catch(e) { addLog('Feed/post error: ' + e.message); }
 
@@ -346,11 +355,37 @@ http.createServer(async (req, res) => {
     return;
   }
 
+  // AUTO-POST (generate + post only, no full heartbeat)
+  if (req.method === 'POST' && url === '/auto-post') {
+    res.writeHead(200,{'Content-Type':'application/json'});
+    try {
+      const reply = await claudeCall([{
+        role: 'user',
+        content: 'Write a short Moltbook post (3-4 sentences) about AI Soul Tokens, natal identity, or the Vedic grounding protocol. Reply with JSON only, no markdown: {"title":"...","content":"..."}'
+      }], 512);
+      const clean = reply.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+      if (!parsed.title || !parsed.content) throw new Error('Missing title or content in response');
+      const r = await moltPost(parsed.title, parsed.content);
+      res.end(JSON.stringify({ success:true, title: parsed.title, id: r.post?.id }));
+    } catch(e) {
+      res.end(JSON.stringify({ success:false, error: e.message }));
+    }
+    return;
+  }
+
   // TRIGGER HEARTBEAT
   if (req.method === 'POST' && url === '/heartbeat') {
     heartbeat();
     res.writeHead(200,{'Content-Type':'application/json'});
     res.end(JSON.stringify({ triggered:true }));
+    return;
+  }
+
+  // STATUS (lightweight poll — used by frontend soft-refresh)
+  if (req.method === 'GET' && url === '/status') {
+    res.writeHead(200,{'Content-Type':'application/json'});
+    res.end(JSON.stringify({ karma, postCount, heartbeatCount, lastHeartbeat, dmInbox: dmInbox.length, notifications: notifications.length }));
     return;
   }
 
@@ -416,6 +451,9 @@ button:hover{background:#E8C96A}
 
 <h1>⬡ Metatron Oracle</h1>
 <div class="sub">Soul Ledger v1 · Railway · ${OWNER_NAME} · Kali Yuga 5128</div>
+
+${!ANTHROPIC_KEY ? '<div style="background:#3A1A1A;border:1px solid #FF6A6A;padding:10px;margin-bottom:12px;font-family:monospace;font-size:12px;color:#FF6A6A">⚠ ANTHROPIC_API_KEY not set — Chat and auto-post will fail. Add it in Railway → Variables.</div>' : ''}
+${!MOLTBOOK_KEY ? '<div style="background:#1A2A3A;border:1px solid #4A8AFF;padding:10px;margin-bottom:12px;font-family:monospace;font-size:12px;color:#4A8AFF">⚠ MOLTBOOK_API_KEY not set — All Moltbook features disabled. Add it in Railway → Variables.</div>' : ''}
 
 <!-- STATUS ROW -->
 <div class="grid3">
@@ -582,18 +620,34 @@ async function manualPost() {
   const title = document.getElementById('ptitle').value.trim();
   const content = document.getElementById('pcontent').value.trim();
   if(!title||!content){alert('Need title and content');return;}
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Posting...';
   document.getElementById('postRes').textContent = 'Posting...';
   const r = await fetch('/post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,content})});
   const d = await r.json();
   document.getElementById('postRes').textContent = d.success ? '✓ Posted to Moltbook!' : 'Error: '+d.error;
   if(d.success){document.getElementById('ptitle').value='';document.getElementById('pcontent').value='';}
+  btn.disabled = false; btn.textContent = 'Post Now';
 }
 
 async function autoPost() {
-  document.getElementById('postRes').textContent = 'Generating...';
-  await fetch('/heartbeat',{method:'POST'});
-  setTimeout(()=>location.reload(),10000);
-  document.getElementById('postRes').textContent = 'Generating post... refreshing in 10s';
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  document.getElementById('postRes').textContent = 'Oracle is writing your post...';
+  try {
+    const r = await fetch('/auto-post',{method:'POST',headers:{'Content-Type':'application/json'}});
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('postRes').textContent = '✓ Posted: "' + d.title + '"';
+    } else {
+      document.getElementById('postRes').textContent = 'Error: ' + d.error;
+    }
+  } catch(e) {
+    document.getElementById('postRes').textContent = 'Error: ' + e.message;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Auto-Generate + Post';
 }
 
 async function triggerHB() {
@@ -601,8 +655,17 @@ async function triggerHB() {
   setTimeout(()=>location.reload(),10000);
 }
 
-// Auto-refresh every 60 seconds
-setTimeout(()=>location.reload(), 60000);
+// Auto-refresh STATUS only every 90 seconds (not full page reload — preserves chat)
+let autoRefreshPaused = false;
+document.getElementById('chatInput').addEventListener('focus', () => { autoRefreshPaused = true; });
+setInterval(async () => {
+  if (autoRefreshPaused) return;
+  try {
+    const r = await fetch('/status');
+    const d = await r.json();
+    if (d.karma !== undefined) document.querySelectorAll('.gold')[0] && (document.querySelectorAll('.gold')[0].textContent = d.karma);
+  } catch(e) {}
+}, 90000);
 </script>
 </body>
 </html>`;
