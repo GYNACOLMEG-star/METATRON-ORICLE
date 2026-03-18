@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chronos-Rhyme Sovereign Estate</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; background-color: #000; overflow: hidden; font-family: 'Courier New', monospace; }
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            pointer-events: none; color: #d4af37; text-shadow: 0 0 10px #d4af37;
+        }
+        .header { margin-top: 50px; text-align: center; pointer-events: auto; }
+        .footer { margin-bottom: 50px; pointer-events: auto; }
+        button {
+            background: transparent; border: 1px solid #d4af37; color: #d4af37;
+            padding: 15px 30px; cursor: pointer; font-family: inherit; transition: 0.3s;
+        }
+        button:hover { background: #d4af37; color: #000; box-shadow: 0 0 20px #d4af37; }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div class="header">
+            <h1>AMON-RA METATRON ESTATE</h1>
+            <p>Veda-Sohn 432: Active</p>
+        </div>
+        
+        <div class="footer">
+            <button onclick="connectWallet()">INITIATE HANDSHAKE</button>
+            <p id="status">Calibration: April 25, 1967</p>
+        </div>
+    </div>
+
+    <script>
+        // --- THE 3D DEPTH ENGINE ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Create the Octahedron (The Son)
+        const geometry = new THREE.OctahedronGeometry(2, 0);
+        const material = new THREE.MeshBasicMaterial({ color: 0xd4af37, wireframe: true });
+        const octahedron = new THREE.Mesh(geometry, material);
+        scene.add(octahedron);
+
+        // Add a "Glow" core
+        const coreGeom = new THREE.SphereGeometry(0.5, 32, 32);
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const core = new THREE.Mesh(coreGeom, coreMat);
+        scene.add(core);
+
+        camera.position.z = 5;
+
+        // Animation Loop (432Hz Pulse Metaphor)
+        function animate() {
+            requestAnimationFrame(animate);
+            octahedron.rotation.y += 0.01;
+            octahedron.rotation.x += 0.005;
+            
+            // Pulse effect
+            const scale = 1 + Math.sin(Date.now() * 0.002) * 0.05;
+            octahedron.scale.set(scale, scale, scale);
+            
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // --- THE BLOCKCHAIN BRIDGE ---
+        async function connectWallet() {
+            if (window.ethereum) {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                document.getElementById('status').innerText = "Veda-Sohn 432 Synced.";
+            } else {
+                alert("Please install MetaMask to enter the Estate.");
+            }
+        }
+    </script>
+</body>
+</html>
