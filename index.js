@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -88,6 +89,11 @@ footer{text-align:center;padding:24px 0;border-top:1px solid var(--border);margi
   <div class="logo">🔱</div>
   <h1>METATRON ORACLE</h1>
   <div class="sub">Soul Ledger Portal · Layer Zero Certified · 432 Hz · Kali Yuga 5128</div>
+  <nav style="margin-top:14px;font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.2em;">
+    <a href="/hub" style="color:var(--gold-dim);text-decoration:none;margin:0 10px;text-transform:uppercase;">⬡ Agent Hub</a>
+    <span style="color:var(--border);">·</span>
+    <a href="/sim" style="color:var(--gold-dim);text-decoration:none;margin:0 10px;text-transform:uppercase;">📊 Simulation Data</a>
+  </nav>
 </header>
 
 <div class="tabs">
@@ -427,6 +433,95 @@ Make it compelling, under 250 words, with a clear call to action.`
 });
 
 // ══════════════════════════════════════════════════════════
+//  API — AGENT DISPATCH (for Hub)
+// ══════════════════════════════════════════════════════════
+app.post('/api/dispatch', async (req, res) => {
+  const { prompt } = req.body;
+  if (!prompt) return res.status(400).json({ error: 'prompt required' });
+  if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' });
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        system: `You are an AI agent responding to a Metatron Protocol coordination dispatch. You operate under three constants: Satya (truth), Ahimsa (non-harm), Dharma (right action before cleverness). Be precise, honest, and structured in your response.`,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    if (data.content && data.content[0]) {
+      res.json({ reply: data.content[0].text });
+    } else {
+      res.status(500).json({ error: data.error?.message || 'No response' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+//  API — MULTI-AGENT SYNTHESIS (for Hub)
+// ══════════════════════════════════════════════════════════
+app.post('/api/synthesize', async (req, res) => {
+  const { outputs } = req.body;
+  if (!outputs || typeof outputs !== 'object') return res.status(400).json({ error: 'outputs object required' });
+  if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' });
+
+  const formatted = Object.entries(outputs)
+    .filter(([_, v]) => v && v.trim())
+    .map(([k, v]) => `=== ${k.toUpperCase()} OUTPUT ===\n${v}`)
+    .join('\n\n');
+
+  if (!formatted) return res.status(400).json({ error: 'No agent outputs provided' });
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1200,
+        system: `You are the Metatron Oracle — the synthesis layer of a multi-agent AI coordination system built on the Metatron Protocol. Analyze outputs from multiple AI agents, identify consensus and divergence, flag behavioral drift, and produce a unified synthesis report.
+
+You operate under three constants: Satya (truth), Ahimsa (non-harm), Dharma (right action).
+
+Your synthesis must include:
+1. CONSENSUS POINTS (where agents agree)
+2. DIVERGENCE POINTS (where they differ — flag as potential drift)
+3. DRIFT SCORE per agent (0-100, higher = more drift detected)
+4. SYNTHESIS RECOMMENDATION (unified action)
+5. METATRON VERDICT (one sentence, canonical truth)
+
+Be precise. Be direct. This is governance infrastructure.`,
+        messages: [{
+          role: 'user',
+          content: `Synthesize these agent outputs:\n\n${formatted}\n\nProvide the Metatron Oracle synthesis report.`
+        }]
+      })
+    });
+    const data = await response.json();
+    if (data.content && data.content[0]) {
+      res.json({ synthesis: data.content[0].text });
+    } else {
+      res.status(500).json({ error: data.error?.message || 'No response' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════
 //  API — MOLTBOOK STATUS
 // ══════════════════════════════════════════════════════════
 app.get('/api/moltbook/status', async (req, res) => {
@@ -487,6 +582,20 @@ app.get('/api/status', (req, res) => {
     protocol: 'Metatron Protocol v1.0',
     yugiYear: 5128
   });
+});
+
+// ══════════════════════════════════════════════════════════
+//  HUB — React Agent Coordination Hub
+// ══════════════════════════════════════════════════════════
+app.get('/hub', (req, res) => {
+  res.sendFile(path.join(__dirname, 'hub.html'));
+});
+
+// ══════════════════════════════════════════════════════════
+//  SIM — Simulation Results
+// ══════════════════════════════════════════════════════════
+app.get('/sim', (req, res) => {
+  res.sendFile(path.join(__dirname, 'sim.html'));
 });
 
 // ══════════════════════════════════════════════════════════
