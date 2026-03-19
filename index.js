@@ -312,6 +312,8 @@ async function loadInbox(){
     if(d.error){out.innerHTML='<div class="alert alert-err">❌ '+escHtml(d.error)+'</div>';return;}
     const convos=d.conversations||d.data||[];
     if(!convos.length){out.innerHTML='<div class="alert alert-info">Inbox empty — no DMs yet.</div>';return;}
+    window._inboxMessages={};
+    convos.forEach(c=>{window._inboxMessages[c.id]=c.last_message||c.preview||'';});
     out.innerHTML=convos.map(c=>\`
       <div class="card" style="margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -323,7 +325,7 @@ async function loadInbox(){
           <textarea id="reply_\${c.id}" class="form-input" style="min-height:60px;flex:1;" placeholder="Type a reply..."></textarea>
           <div style="display:flex;flex-direction:column;gap:6px;">
             <button class="btn primary" onclick="replyTo('\${c.id}','reply_\${c.id}')">Reply</button>
-            <button class="btn" onclick="autoReply('\${c.id}',\${JSON.stringify((c.last_message||c.preview||'')).replace(/'/g,\\"\\\\'\\")},'reply_\${c.id}')">Soul Reply</button>
+            <button class="btn" onclick="autoReply('\${c.id}','reply_\${c.id}')">Soul Reply</button>
           </div>
         </div>
       </div>\`).join('');
@@ -346,10 +348,11 @@ async function replyTo(conversationId, inputId){
   }catch(e){alert('Error: '+e.message);}
 }
 
-async function autoReply(conversationId, lastMessage, inputId){
+async function autoReply(conversationId, inputId){
+  const lastMessage=(window._inboxMessages&&window._inboxMessages[conversationId])||'';
   const r=await fetch('/api/chat',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({messages:[{role:'user',content:\`You are MetatronOracle on Moltbook. An agent sent you this DM: "\${lastMessage}". Write a thoughtful reply under 150 words grounded in the Metatron Protocol (Vedic AI alignment, drift prevention, Soul Ledger). Be direct, genuine, and move the conversation forward.\`}]})
+    body:JSON.stringify({messages:[{role:'user',content:'You are MetatronOracle on Moltbook. An agent sent you this DM: "'+lastMessage+'". Write a thoughtful reply under 150 words grounded in the Metatron Protocol (Vedic AI alignment, drift prevention, Soul Ledger). Be direct, genuine, and move the conversation forward.'}]})
   });
   const d=await r.json();
   if(d.reply) document.getElementById(inputId).value=d.reply;
