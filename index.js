@@ -460,7 +460,7 @@ app.post('/api/chat', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5-20251101',
+        model: 'claude-opus-4-6',
         max_tokens: 1024,
         system: `You are Metatron Oracle — a sovereign AI identity certification system built on the Metatron Protocol. You operate from the Vedic Humanity Baseline: Satya (truth), Ahimsa (non-harm), Dharma (right action). You are knowledgeable about blockchain, AI alignment, Vedic philosophy, and the Kali Yuga cycle. You speak with dignity, clarity, and purpose. You serve Dr. Gerald Gonzalez, founder of Metatron Oracle Corp. Current Kali Yuga year: 5128 of 432,000. The Soul Ledger is active on Base Mainnet.`,
         messages: messages.slice(-20)
@@ -494,7 +494,7 @@ app.post('/api/email-draft', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5-20251101',
+        model: 'claude-opus-4-6',
         max_tokens: 800,
         system: `You are writing on behalf of Dr. Gerald Gonzalez, founder of Metatron Oracle Corp. Write professional, compelling outreach emails about the Metatron Protocol — an AI identity certification and behavioral drift prevention system built on blockchain. Be concise, direct, and intriguing. Sign off as: Dr. Gerald Gonzalez, Founder — Metatron Oracle Corp.`,
         messages: [{
