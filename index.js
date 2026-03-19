@@ -97,10 +97,10 @@ footer{text-align:center;padding:24px 0;border-top:1px solid var(--border);margi
 </header>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('chat')">⚡ Oracle Chat</button>
-  <button class="tab" onclick="switchTab('email')">✉ Email Outreach</button>
-  <button class="tab" onclick="switchTab('moltbook')">🤖 Agent Network</button>
-  <button class="tab" onclick="switchTab('status')">⚙ System Status</button>
+  <button class="tab active" onclick="switchTab(event,'chat')">⚡ Oracle Chat</button>
+  <button class="tab" onclick="switchTab(event,'email')">✉ Email Outreach</button>
+  <button class="tab" onclick="switchTab(event,'moltbook')">🤖 Agent Network</button>
+  <button class="tab" onclick="switchTab(event,'status')">⚙ System Status</button>
 </div>
 
 <!-- ── ORACLE CHAT ── -->
@@ -206,10 +206,10 @@ footer{text-align:center;padding:24px 0;border-top:1px solid var(--border);margi
 
 <script>
 // ── TAB SWITCHING ──────────────────────────────
-function switchTab(name){
+function switchTab(e,name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  event.target.classList.add('active');
+  e.target.classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='status') loadStatus();
   if(name==='moltbook') checkMoltbook();
