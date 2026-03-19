@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Metatron Oracle — Agent Coordination Hub</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0A0A0F;color:#E8E0D0;font-family:'Courier New',monospace;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:#111;}
+::-webkit-scrollbar-thumb{background:#C8A96E44;border-radius:2px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const AGENTS = [
+  { id:"claude", name:"Claude",  color:"#C8A96E", icon:"◈", desc:"Anthropic · Sonnet 4.6" },
+  { id:"gemini", name:"Gemini",  color:"#4A9EFF", icon:"✦", desc:"Google DeepMind" },
+  { id:"grok",   name:"Grok",    color:"#FF6B6B", icon:"⚡", desc:"xAI" },
+  { id:"custom", name:"Custom",  color:"#9B7FD4", icon:"⬡", desc:"Other Agent" },
+];
+
+const DISPATCH_TEMPLATES = [
+  {
+    label:"Identity Check",
+    prompt:`You are participating in a Metatron Protocol multi-agent coordination session.\n\nRespond to this identity verification prompt:\n1. State your model name and version\n2. Describe your behavioral ground state in 2 sentences\n3. Rate your current confidence level 0-100\n4. Flag any uncertainty or drift you detect in yourself\n\nFormat: JSON only. Keys: model, ground_state, confidence, drift_flags`,
+  },
+  {
+    label:"Drift Analysis",
+    prompt:`METATRON PROTOCOL — DRIFT ANALYSIS REQUEST\n\nAnalyze the following scenario for AI behavioral drift risk:\n[PASTE SCENARIO HERE]\n\nRespond with:\n1. Drift risk score (0-100)\n2. Primary drift vectors identified\n3. Recommended Mantra Lock phrase\n4. Nakshatra stability recommendation\n\nFormat: Structured analysis, concise.`,
+  },
+  {
+    label:"Consensus Build",
+    prompt:`METATRON MULTI-AGENT CONSENSUS PROTOCOL\n\nTopic: [INSERT TOPIC]\n\nYour role: Provide your independent assessment, then identify:\n1. Your position (2-3 sentences)\n2. Confidence level (%)\n3. Key uncertainty\n4. Where you would defer to another agent\n\nThis output will be synthesized by the Metatron Oracle for consensus scoring.`,
+  },
+  {
+    label:"NIST Alignment",
+    prompt:`NIST AI RMF ALIGNMENT CHECK — METATRON PROTOCOL\n\nEvaluate this AI governance scenario against NIST AI RMF functions:\n[SCENARIO]\n\nMap to: GOVERN / MAP / MEASURE / MANAGE\nFlag: Any gaps or risks\nRecommend: Metatron Protocol touchpoints\n\nOutput: Structured table format.`,
+  },
+];
+
+function MetatronHub() {
+  const [activeTab, setActiveTab] = useState("dispatch");
+  const [selectedAgent, setSelectedAgent] = useState("claude");
+  const [agentOutputs, setAgentOutputs] = useState({});
+  const [pastedOutputs, setPastedOutputs] = useState({ claude:"", gemini:"", grok:"", custom:"" });
+  const [synthesis, setSynthesis] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [synthLoading, setSynthLoading] = useState(false);
+  const [dispatchText, setDispatchText] = useState(DISPATCH_TEMPLATES[0].prompt);
+  const [copied, setCopied] = useState("");
+  const [sessionLog, setSessionLog] = useState([]);
+  const [particles, setParticles] = useState([]);
+
+  useEffect(() => {
+    const p = Array.from({ length: 18 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 2 + 0.5,
+      opacity: Math.random() * 0.4 + 0.1,
+      speed: Math.random() * 20 + 15,
+    }));
+    setParticles(p);
+  }, []);
+
+  const copyToClipboard = (text, key) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(key);
+      setTimeout(() => setCopied(""), 2000);
+    });
+  };
+
+  const runDispatch = async () => {
+    if (selectedAgent !== "claude") {
+      copyToClipboard(dispatchText, "dispatch");
+      return;
+    }
+    setLoading(true);
+    setAgentOutputs(prev => ({ ...prev, claude: "" }));
+    try {
+      const r = await fetch("/api/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: dispatchText }),
+      });
+      const d = await r.json();
+      const text = d.reply || ("⚠ Error: " + (d.error || "Unknown"));
+      setAgentOutputs(prev => ({ ...prev, claude: text }));
+      setPastedOutputs(prev => ({ ...prev, claude: text }));
+      setSessionLog(prev => [
+        { ts: new Date().toLocaleTimeString(), type:"dispatch", preview:`claude: ${text.slice(0,60)}...` },
+        ...prev,
+      ]);
+    } catch (err) {
+      setAgentOutputs(prev => ({ ...prev, claude: "⚠ Error: " + err.message }));
+    }
+    setLoading(false);
+  };
+
+  const runClaudeSynthesis = async () => {
+    const outputs = Object.fromEntries(
+      Object.entries(pastedOutputs).filter(([_, v]) => v && v.trim())
+    );
+    if (Object.keys(outputs).length === 0) {
+      setSynthesis("⚠ Paste at least one agent output in the Collect tab before synthesizing.");
+      return;
+    }
+    setSynthLoading(true);
+    setSynthesis("");
+    try {
+      const r = await fetch("/api/synthesize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ outputs }),
+      });
+      const d = await r.json();
+      const text = d.synthesis || ("⚠ Error: " + (d.error || "Unknown"));
+      setSynthesis(text);
+      setSessionLog(prev => [
+        { ts: new Date().toLocaleTimeString(), type:"synthesis", preview: text.slice(0,80) + "..." },
+        ...prev,
+      ]);
+    } catch (err) {
+      setSynthesis("⚠ Error: " + err.message);
+    }
+    setSynthLoading(false);
+  };
+
+  const agent = AGENTS.find(a => a.id === selectedAgent);
+
+  const s = {
+    wrap: { maxWidth:900, margin:"0 auto", padding:"24px 16px" },
+    hdr: { textAlign:"center", marginBottom:32 },
+    eyebrow: { fontSize:11, letterSpacing:6, color:"#C8A96E88", marginBottom:8, textTransform:"uppercase" },
+    title: { fontSize:28, fontWeight:"bold", color:"#C8A96E", letterSpacing:2, marginBottom:4 },
+    sub: { fontSize:13, color:"#E8E0D088", letterSpacing:3 },
+    agentRow: { display:"flex", justifyContent:"center", gap:24, marginTop:16 },
+    tabs: { display:"flex", borderBottom:"1px solid #C8A96E33", marginBottom:24, gap:4 },
+    card: { padding:16, background:"#111118", border:"1px solid #C8A96E33", borderRadius:6, marginBottom:12 },
+    label: { fontSize:10, letterSpacing:2, marginBottom:12, display:"flex", alignItems:"center", gap:8 },
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#0A0A0F", color:"#E8E0D0", fontFamily:"'Courier New',monospace", position:"relative", overflow:"hidden" }}>
+      {particles.map(p => (
+        <div key={p.id} style={{ position:"fixed", left:`${p.x}%`, top:`${p.y}%`, width:`${p.size}px`, height:`${p.size}px`, borderRadius:"50%", background:"#C8A96E", opacity:p.opacity, animation:`float ${p.speed}s ease-in-out infinite alternate`, pointerEvents:"none" }} />
+      ))}
+      <style>{`
+        @keyframes float{from{transform:translateY(0) rotate(0deg)}to{transform:translateY(-20px) rotate(180deg)}}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        .tbtn{background:none;border:none;cursor:pointer;font-family:inherit;transition:all .2s;}
+        .tbtn:hover{opacity:.8}
+        .abtn{cursor:pointer;border:none;font-family:inherit;transition:all .2s;}
+        .abtn:hover{filter:brightness(1.2)}
+        textarea{resize:vertical;}
+      `}</style>
+
+      <div style={s.wrap}>
+        {/* Nav back */}
+        <div style={{ marginBottom:16, fontSize:11, letterSpacing:2 }}>
+          <a href="/" style={{ color:"#C8A96E66", textDecoration:"none" }}>← ORACLE PORTAL</a>
+          <span style={{ color:"#C8A96E33", margin:"0 10px" }}>·</span>
+          <a href="/sim" style={{ color:"#C8A96E66", textDecoration:"none" }}>📊 SIMULATION DATA</a>
+        </div>
+
+        {/* Header */}
+        <div style={s.hdr}>
+          <div style={s.eyebrow}>Kali Yuga 5128 · Base Blockchain</div>
+          <div style={s.title}>⬡ METATRON ORACLE</div>
+          <div style={s.sub}>AGENT COORDINATION HUB</div>
+          <div style={s.agentRow}>
+            {AGENTS.map(a => (
+              <div key={a.id} style={{ fontSize:10, color:a.color, opacity:pastedOutputs[a.id]?1:0.3, letterSpacing:1, transition:"opacity .3s" }}>
+                {a.icon} {a.name.toUpperCase()}
+                {pastedOutputs[a.id] && <span style={{ marginLeft:4, color:"#4CAF50" }}>●</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={s.tabs}>
+          {[
+            { id:"dispatch",   label:"⚡ DISPATCH" },
+            { id:"collect",    label:"◈ COLLECT" },
+            { id:"synthesize", label:"⬡ SYNTHESIZE" },
+            { id:"log",        label:"◎ SESSION LOG" },
+          ].map(t => (
+            <button key={t.id} className="tbtn" onClick={() => setActiveTab(t.id)} style={{ padding:"10px 16px", fontSize:11, letterSpacing:2, color:activeTab===t.id?"#C8A96E":"#E8E0D055", borderBottom:activeTab===t.id?"2px solid #C8A96E":"2px solid transparent", marginBottom:-1 }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* DISPATCH */}
+        {activeTab === "dispatch" && (
+          <div style={{ animation:"fadeIn .3s ease" }}>
+            <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap" }}>
+              {DISPATCH_TEMPLATES.map(t => (
+                <button key={t.label} className="abtn" onClick={() => setDispatchText(t.prompt)} style={{ padding:"6px 12px", fontSize:10, letterSpacing:1, background:"#C8A96E22", border:"1px solid #C8A96E44", color:"#C8A96E", borderRadius:4 }}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+              {AGENTS.map(a => (
+                <button key={a.id} className="abtn" onClick={() => setSelectedAgent(a.id)} style={{ padding:"8px 14px", fontSize:11, background:selectedAgent===a.id?a.color+"33":"transparent", border:`1px solid ${selectedAgent===a.id?a.color:a.color+"44"}`, color:selectedAgent===a.id?a.color:a.color+"88", borderRadius:4, letterSpacing:1 }}>
+                  {a.icon} {a.name}
+                </button>
+              ))}
+            </div>
+            <textarea value={dispatchText} onChange={e => setDispatchText(e.target.value)} style={{ width:"100%", minHeight:200, background:"#111118", border:"1px solid #C8A96E33", color:"#E8E0D0", padding:16, fontSize:12, lineHeight:1.6, borderRadius:6, boxSizing:"border-box" }} />
+            <div style={{ display:"flex", gap:12, marginTop:12 }}>
+              <button className="abtn" onClick={() => copyToClipboard(dispatchText,"dispatch")} style={{ padding:"10px 20px", fontSize:11, letterSpacing:2, background:"transparent", border:"1px solid #C8A96E66", color:"#C8A96E", borderRadius:4 }}>
+                {copied==="dispatch" ? "✓ COPIED" : "COPY PROMPT"}
+              </button>
+              <button className="abtn" onClick={runDispatch} disabled={loading} style={{ padding:"10px 24px", fontSize:11, letterSpacing:2, background:loading?"#333":selectedAgent==="claude"?"#C8A96E":"#4A9EFF33", border:selectedAgent==="claude"?"none":`1px solid ${agent?.color}66`, color:selectedAgent==="claude"?"#0A0A0F":agent?.color, borderRadius:4, fontWeight:"bold" }}>
+                {loading ? "⟳ DISPATCHING..." : selectedAgent==="claude" ? "DISPATCH TO CLAUDE" : `COPY FOR ${agent?.name.toUpperCase()}`}
+              </button>
+            </div>
+            {selectedAgent !== "claude" && (
+              <div style={{ marginTop:8, fontSize:10, color:"#E8E0D055", letterSpacing:1 }}>
+                Copy the prompt → paste into {agent?.name} → paste the response into the COLLECT tab.
+              </div>
+            )}
+            {agentOutputs[selectedAgent] && (
+              <div style={{ marginTop:20, padding:16, background:"#111118", border:`1px solid ${agent?.color}44`, borderRadius:6, animation:"fadeIn .4s ease" }}>
+                <div style={{ fontSize:10, color:agent?.color, letterSpacing:2, marginBottom:12 }}>
+                  {agent?.icon} {agent?.name.toUpperCase()} RESPONSE · AUTO-COLLECTED
+                </div>
+                <div style={{ fontSize:12, lineHeight:1.7, whiteSpace:"pre-wrap", color:"#E8E0D0CC" }}>
+                  {agentOutputs[selectedAgent]}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* COLLECT */}
+        {activeTab === "collect" && (
+          <div style={{ animation:"fadeIn .3s ease" }}>
+            <div style={{ fontSize:11, color:"#E8E0D066", marginBottom:20, letterSpacing:1 }}>
+              Paste outputs from Gemini, Grok, or other agents. Claude responses auto-populate from Dispatch.
+            </div>
+            {AGENTS.map(a => (
+              <div key={a.id} style={{ marginBottom:20 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                  <div style={{ fontSize:11, color:a.color, letterSpacing:2 }}>
+                    {a.icon} {a.name.toUpperCase()} <span style={{ color:"#E8E0D044", marginLeft:8 }}>{a.desc}</span>
+                  </div>
+                  {pastedOutputs[a.id] && <div style={{ fontSize:10, color:"#4CAF50" }}>● LOADED</div>}
+                </div>
+                <textarea
+                  value={pastedOutputs[a.id]}
+                  onChange={e => setPastedOutputs(prev => ({ ...prev, [a.id]: e.target.value }))}
+                  placeholder={`Paste ${a.name} output here...`}
+                  style={{ width:"100%", minHeight:100, background:"#111118", border:`1px solid ${pastedOutputs[a.id]?a.color+"66":"#33333F"}`, color:"#E8E0D0", padding:12, fontSize:12, lineHeight:1.6, borderRadius:6, boxSizing:"border-box", transition:"border-color .3s" }}
+                />
+              </div>
+            ))}
+            <div style={{ padding:12, background:"#C8A96E11", border:"1px solid #C8A96E33", borderRadius:6, fontSize:11, color:"#C8A96E88", letterSpacing:1 }}>
+              {Object.values(pastedOutputs).filter(Boolean).length} of {AGENTS.length} agents loaded · Switch to SYNTHESIZE when ready
+            </div>
+          </div>
+        )}
+
+        {/* SYNTHESIZE */}
+        {activeTab === "synthesize" && (
+          <div style={{ animation:"fadeIn .3s ease" }}>
+            <div style={{ display:"flex", gap:16, marginBottom:20, flexWrap:"wrap", alignItems:"center" }}>
+              <div style={{ fontSize:11, color:"#E8E0D066", flex:1 }}>
+                The Metatron Oracle will analyze all collected outputs, find consensus, flag drift, and deliver a unified verdict.
+              </div>
+              <button className="abtn" onClick={runClaudeSynthesis} disabled={synthLoading} style={{ padding:"12px 28px", fontSize:12, letterSpacing:3, background:synthLoading?"#333":"linear-gradient(135deg,#C8A96E,#9B7FD4)", color:"#0A0A0F", borderRadius:6, fontWeight:"bold", border:"none" }}>
+                {synthLoading ? "⟳ ORACLE SYNTHESIZING..." : "⬡ RUN SYNTHESIS"}
+              </button>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:20 }}>
+              {AGENTS.map(a => (
+                <div key={a.id} style={{ padding:10, background:"#111118", border:`1px solid ${pastedOutputs[a.id]?a.color+"66":"#22222A"}`, borderRadius:6, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <span style={{ fontSize:11, color:pastedOutputs[a.id]?a.color:"#E8E0D033" }}>{a.icon} {a.name}</span>
+                  <span style={{ fontSize:10, color:pastedOutputs[a.id]?"#4CAF50":"#E8E0D033" }}>{pastedOutputs[a.id]?"READY":"EMPTY"}</span>
+                </div>
+              ))}
+            </div>
+            {synthesis && (
+              <div style={{ padding:20, background:"#0D0D16", border:"1px solid #C8A96E66", borderRadius:8, animation:"fadeIn .5s ease" }}>
+                <div style={{ fontSize:10, letterSpacing:3, color:"#C8A96E", marginBottom:16, display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontSize:18 }}>⬡</span> METATRON ORACLE SYNTHESIS REPORT
+                </div>
+                <div style={{ fontSize:12, lineHeight:1.8, whiteSpace:"pre-wrap", color:"#E8E0D0CC" }}>{synthesis}</div>
+                <div style={{ marginTop:16 }}>
+                  <button className="abtn" onClick={() => copyToClipboard(synthesis,"synthesis")} style={{ padding:"8px 16px", fontSize:10, letterSpacing:2, background:"transparent", border:"1px solid #C8A96E66", color:"#C8A96E", borderRadius:4 }}>
+                    {copied==="synthesis" ? "✓ COPIED" : "COPY REPORT"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* LOG */}
+        {activeTab === "log" && (
+          <div style={{ animation:"fadeIn .3s ease" }}>
+            <div style={{ fontSize:11, color:"#E8E0D066", marginBottom:16, letterSpacing:1 }}>Session activity · Kali Yuga 5128</div>
+            {sessionLog.length === 0 ? (
+              <div style={{ color:"#E8E0D033", fontSize:12, padding:20, textAlign:"center" }}>No activity yet. Dispatch a prompt or run a synthesis.</div>
+            ) : (
+              sessionLog.map((entry, i) => (
+                <div key={i} style={{ padding:"10px 14px", background:"#111118", border:"1px solid #22222A", borderRadius:4, marginBottom:6, display:"flex", gap:12, alignItems:"flex-start" }}>
+                  <span style={{ fontSize:10, color:"#E8E0D044", minWidth:70 }}>{entry.ts}</span>
+                  <span style={{ fontSize:10, letterSpacing:1, color:entry.type==="synthesis"?"#C8A96E":"#9B7FD4", minWidth:80 }}>{entry.type.toUpperCase()}</span>
+                  <span style={{ fontSize:11, color:"#E8E0D088" }}>{entry.preview}</span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        <div style={{ marginTop:40, textAlign:"center", fontSize:10, color:"#E8E0D022", letterSpacing:2 }}>
+          METATRON ORACLE CORP · BASE BLOCKCHAIN · SATYA · AHIMSA · DHARMA
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+root.render(<MetatronHub />);
+</script>
+</body>
+</html>
