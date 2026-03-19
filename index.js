@@ -21,6 +21,9 @@ const PORT              = process.env.PORT              || 8080;
 //  ROOT — Serve the Metatron Oracle Portal
 // ══════════════════════════════════════════════════════════
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'portal.html'));
+});
+app.get('/_old', (req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -440,6 +443,7 @@ window.addEventListener('load',()=>{
 </script>
 </body>
 </html>`);
+// end _old route
 });
 
 // ══════════════════════════════════════════════════════════
