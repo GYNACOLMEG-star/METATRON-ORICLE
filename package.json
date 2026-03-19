@@ -1,5 +1,5 @@
 {
-  "name": "metatron-oracle-api",
+  "name": "metatron-oracle",
   "version": "1.0.0",
   "description": "Metatron Oracle — Claude-powered outreach and drift detection API",
   "type": "module",
