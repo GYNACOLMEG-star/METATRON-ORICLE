@@ -8,7 +8,7 @@ const https   = require('https');
 const http    = require('http');
 const fs      = require('fs');
 const path    = require('path');
-const PORT    = process.env.PORT || 3000;
+const PORT    = process.env.PORT || 8080;
 
 const ANTHROPIC_KEY  = process.env.ANTHROPIC_API_KEY  || '';
 const MOLTBOOK_KEY   = process.env.MOLTBOOK_API_KEY   || '';
