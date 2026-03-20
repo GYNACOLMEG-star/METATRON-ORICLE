@@ -819,6 +819,13 @@ app.get('/api/agents', (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════
+//  APP — Mobile Command Interface (all ports)
+// ══════════════════════════════════════════════════════════
+app.get('/app', (req, res) => {
+  res.sendFile(path.join(__dirname, 'app.html'));
+});
+
+// ══════════════════════════════════════════════════════════
 //  MESSAGING — Markdown Messaging Interface
 // ══════════════════════════════════════════════════════════
 app.get('/messaging', (req, res) => {

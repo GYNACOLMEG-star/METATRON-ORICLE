@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Metatron"/>
+<meta name="theme-color" content="#04080f"/>
+<title>Metatron Oracle — Command</title>
+<style>
+:root{
+  --gold:#c9a84c;--gold-b:#f0c040;--gold-d:#7a6022;
+  --deep:#04080f;--panel:#080e1a;--panel2:#0b1225;
+  --border:rgba(201,168,76,0.22);
+  --text:#d4c5a0;--text-d:#7a7060;
+  --red:#c04040;--green:#40a060;--blue:#4080c0;--cyan:#40c0c0;
+  --safe: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--deep);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;height:100%;height:100dvh;}
+.header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px 10px;border-bottom:1px solid var(--border);
+  background:var(--panel);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{font-size:1.4rem;line-height:1;}
+.logo-text{font-size:.85rem;font-weight:700;letter-spacing:.08em;color:var(--gold-b);}
+.logo-sub{font-size:.58rem;color:var(--text-d);letter-spacing:.1em;margin-top:1px;}
+.status-pill{font-size:.62rem;padding:3px 9px;border-radius:20px;border:1px solid var(--border);
+  color:var(--text-d);display:flex;align-items:center;gap:5px;}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--red);}
+.sdot.on{background:var(--green);box-shadow:0 0 5px var(--green);}
+
+/* ── CONTENT AREA ── */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:8px;}
+.panel{display:none;padding:14px 14px 0;}
+.panel.on{display:block;}
+
+/* ── NAV BAR ── */
+.navbar{flex-shrink:0;display:flex;border-top:1px solid var(--border);
+  background:var(--panel);padding-bottom:var(--safe);}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:9px 4px 8px;border:none;background:none;
+  color:var(--text-d);font-size:.55rem;letter-spacing:.06em;text-transform:uppercase;
+  cursor:pointer;transition:color .15s;gap:4px;}
+.nav-item .ni{font-size:1.3rem;line-height:1;}
+.nav-item.on{color:var(--gold-b);}
+.nav-item.on .ni{filter:drop-shadow(0 0 6px rgba(240,192,64,.6));}
+
+/* ── CARDS ── */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+  padding:14px;margin-bottom:12px;}
+.ctitle{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);
+  margin-bottom:11px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+/* ── CHAT ── */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100dvh - 56px - 62px - 28px);}
+.chat-msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  background:#020408;border:1px solid var(--border);border-radius:8px;
+  padding:10px;margin-bottom:10px;}
+.msg{margin-bottom:12px;padding:9px 12px;border-radius:8px;font-size:.85rem;line-height:1.6;}
+.msg.user{background:rgba(201,168,76,.08);border-left:2px solid var(--gold);}
+.msg.oracle{background:rgba(64,128,192,.07);border-left:2px solid var(--blue);}
+.msg.sys{background:rgba(64,160,96,.06);border-left:2px solid var(--green);
+  font-size:.75rem;font-style:italic;color:var(--text-d);}
+.msg-role{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-d);margin-bottom:3px;}
+.msg.user .msg-role{color:var(--gold);}
+.msg.oracle .msg-role{color:#90c0e0;}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end;}
+.chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:.95rem;padding:10px 12px;resize:none;
+  max-height:80px;font-family:inherit;line-height:1.4;}
+.chat-input:focus{outline:none;border-color:var(--gold);}
+
+/* ── BUTTONS ── */
+.btn{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;
+  padding:10px 16px;border-radius:8px;border:1px solid var(--gold-d);
+  background:transparent;color:var(--gold);cursor:pointer;transition:all .15s;
+  font-family:inherit;}
+.btn:active{background:rgba(201,168,76,.15);}
+.btn.pri{background:rgba(201,168,76,.1);border-color:var(--gold);}
+.btn.send{background:var(--gold);color:var(--deep);border-color:var(--gold);
+  padding:10px 14px;font-weight:700;border-radius:8px;font-size:.8rem;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-full{width:100%;text-align:center;margin-top:4px;}
+
+/* ── FORMS ── */
+.fg{margin-bottom:10px;}
+.flbl{display:block;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-d);margin-bottom:5px;}
+.finp{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:.9rem;padding:10px 12px;font-family:inherit;}
+.finp:focus{outline:none;border-color:var(--gold);}
+textarea.finp{resize:vertical;min-height:80px;}
+
+/* ── ALERTS ── */
+.alert{padding:9px 12px;border-radius:8px;font-size:.78rem;margin-bottom:10px;
+  border-left:3px solid;line-height:1.5;}
+.ao{background:rgba(64,160,96,.08);border-color:var(--green);color:#80d0a0;}
+.ae{background:rgba(192,64,64,.08);border-color:var(--red);color:#f08080;}
+.ai{background:rgba(64,128,192,.08);border-color:var(--blue);color:#90c0e0;}
+.aw{background:rgba(201,168,76,.08);border-color:var(--gold);color:var(--gold);}
+
+/* ── STATUS GRID ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.stat-box{background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+  padding:12px;text-align:center;}
+.stat-val{font-size:1.1rem;font-weight:700;color:var(--gold-b);margin-bottom:2px;}
+.stat-lbl{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-d);}
+
+/* ── INBOX ── */
+.inbox-item{background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+  padding:12px;margin-bottom:8px;}
+.inbox-from{font-size:.72rem;letter-spacing:.1em;color:var(--gold);text-transform:uppercase;
+  margin-bottom:4px;}
+.inbox-preview{font-size:.8rem;color:var(--text-d);margin-bottom:8px;line-height:1.4;}
+.inbox-reply-row{display:flex;gap:6px;}
+.inbox-reply-input{flex:1;background:var(--panel);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-size:.82rem;padding:7px 10px;font-family:inherit;}
+.inbox-reply-input:focus{outline:none;border-color:var(--gold);}
+
+/* ── AGENT LIST ── */
+.agent-item{display:flex;align-items:center;gap:10px;padding:10px;
+  background:var(--panel2);border:1px solid var(--border);border-radius:8px;margin-bottom:7px;}
+.agent-icon{font-size:1.4rem;line-height:1;flex-shrink:0;}
+.agent-info{flex:1;min-width:0;}
+.agent-name{font-size:.82rem;color:var(--text);font-weight:600;}
+.agent-meta{font-size:.65rem;color:var(--text-d);margin-top:1px;}
+.agent-badge{font-size:.6rem;padding:2px 7px;border-radius:3px;border:1px solid;flex-shrink:0;}
+.badge-on{border-color:var(--green);color:#60d080;}
+.badge-off{border-color:var(--border);color:var(--text-d);}
+
+/* ── SPINNER ── */
+.spin{display:inline-block;width:11px;height:11px;border:2px solid rgba(201,168,76,.2);
+  border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-left:5px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+/* ── LINKS ── */
+.port-links{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.port-link{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:16px 8px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+  text-decoration:none;color:var(--text);gap:6px;transition:border-color .15s;}
+.port-link:active{border-color:var(--gold);background:rgba(201,168,76,.06);}
+.port-link-icon{font-size:1.5rem;line-height:1;}
+.port-link-label{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);}
+.port-link-desc{font-size:.58rem;color:var(--text-d);text-align:center;line-height:1.3;}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🔱</div>
+    <div>
+      <div class="logo-text">METATRON ORACLE</div>
+      <div class="logo-sub">Soul Ledger · 432 Hz · Kali Yuga 5128</div>
+    </div>
+  </div>
+  <div class="status-pill">
+    <div class="sdot" id="hdrDot"></div>
+    <span id="hdrStatus">checking</span>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content" id="content">
+
+  <!-- ── CHAT ── -->
+  <div class="panel on" id="panel-chat">
+    <div class="chat-wrap">
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="msg sys"><div class="msg-role">System</div>Metatron Oracle online. Satya · Ahimsa · Dharma.</div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chatInput" rows="1"
+          placeholder="Speak your intention..."
+          oninput="autoResize(this)"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+        <button class="btn send" id="chatBtn" onclick="sendChat()">▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PORTS ── -->
+  <div class="panel" id="panel-ports">
+    <div class="card">
+      <div class="ctitle">All Communication Ports</div>
+      <div class="port-links">
+        <a class="port-link" href="/" target="_blank">
+          <div class="port-link-icon">🔱</div>
+          <div class="port-link-label">Main Portal</div>
+          <div class="port-link-desc">Chat · Email · Agent Network</div>
+        </a>
+        <a class="port-link" href="/metatron-oracle.html" target="_blank">
+          <div class="port-link-icon">⬡</div>
+          <div class="port-link-label">Soul Ledger</div>
+          <div class="port-link-desc">Register · Drift · Nakshatra</div>
+        </a>
+        <a class="port-link" href="/hub" target="_blank">
+          <div class="port-link-icon">🤖</div>
+          <div class="port-link-label">Agent Hub</div>
+          <div class="port-link-desc">Coordinate all agents</div>
+        </a>
+        <a class="port-link" href="/messaging" target="_blank">
+          <div class="port-link-icon">💬</div>
+          <div class="port-link-label">Messaging</div>
+          <div class="port-link-desc">Markdown interface</div>
+        </a>
+        <a class="port-link" href="/terminal" target="_blank">
+          <div class="port-link-icon">⌨️</div>
+          <div class="port-link-label">Terminal</div>
+          <div class="port-link-desc">Web shell access</div>
+        </a>
+        <a class="port-link" href="/sim" target="_blank">
+          <div class="port-link-icon">📊</div>
+          <div class="port-link-label">Simulation</div>
+          <div class="port-link-desc">100M agent data</div>
+        </a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">API Endpoints</div>
+      <div style="font-family:monospace;font-size:.72rem;line-height:2;color:var(--text-d);">
+        <div><span style="color:var(--gold);">POST</span> /api/chat</div>
+        <div><span style="color:var(--gold);">POST</span> /api/email-draft</div>
+        <div><span style="color:var(--gold);">POST</span> /api/moltbook/send</div>
+        <div><span style="color:var(--gold);">POST</span> /api/moltbook/reply</div>
+        <div><span style="color:var(--gold);">POST</span> /api/moltbook/blast</div>
+        <div><span style="color:var(--gold);">POST</span> /api/dispatch</div>
+        <div><span style="color:var(--gold);">POST</span> /api/synthesize</div>
+        <div><span style="color:var(--green);">GET </span> /api/status</div>
+        <div><span style="color:var(--green);">GET </span> /api/agents</div>
+        <div><span style="color:var(--green);">GET </span> /api/moltbook/status</div>
+        <div><span style="color:var(--green);">GET </span> /api/moltbook/inbox</div>
+        <div><span style="color:var(--cyan);">WS  </span> /terminal-ws</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MOLTBOOK ── -->
+  <div class="panel" id="panel-dm">
+    <div class="card">
+      <div class="ctitle">◈ Moltbook DMs</div>
+      <div class="alert ai" id="moltStatusEl">Checking connection...</div>
+      <div class="btn-row" style="margin-bottom:10px;">
+        <button class="btn pri" onclick="loadInbox()" id="inboxBtn">Load Inbox</button>
+        <button class="btn" onclick="blastDMs()" id="blastBtn">🚀 Blast 5 DMs</button>
+      </div>
+      <div id="blastOut"></div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Send DM</div>
+      <div class="fg"><label class="flbl">Target Username</label>
+        <input class="finp" id="dmTarget" placeholder="ClawdClawderberg"/>
+      </div>
+      <div class="fg"><label class="flbl">Message</label>
+        <textarea class="finp" id="dmMsg" placeholder="Your message..."></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn pri" onclick="sendDM()" id="dmBtn">Send DM</button>
+        <button class="btn" onclick="aiDM()">Oracle Draft</button>
+      </div>
+      <div id="dmOut" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card" id="inboxCard" style="display:none;">
+      <div class="ctitle">Inbox</div>
+      <div id="inboxOut"></div>
+    </div>
+  </div>
+
+  <!-- ── EMAIL ── -->
+  <div class="panel" id="panel-email">
+    <div class="card">
+      <div class="ctitle">✉ Email Draft</div>
+      <div class="fg"><label class="flbl">Recipient Name</label>
+        <input class="finp" id="emailName" placeholder="Matt Schlicht"/>
+      </div>
+      <div class="fg"><label class="flbl">Recipient Email</label>
+        <input class="finp" id="emailTo" type="email" placeholder="founder@example.com"/>
+      </div>
+      <div class="fg"><label class="flbl">Subject</label>
+        <input class="finp" id="emailSubject" placeholder="Metatron Protocol — AI Identity"/>
+      </div>
+      <div class="fg"><label class="flbl">Your Proposition</label>
+        <textarea class="finp" id="emailProp" placeholder="Describe what you want to offer..."></textarea>
+      </div>
+      <button class="btn pri btn-full" onclick="draftEmail()" id="emailBtn">Generate with Claude</button>
+      <div id="emailOut" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- ── STATUS ── -->
+  <div class="panel" id="panel-status">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-val" id="stAnthropic">—</div><div class="stat-lbl">Anthropic API</div></div>
+      <div class="stat-box"><div class="stat-val" id="stMoltbook">—</div><div class="stat-lbl">Moltbook API</div></div>
+      <div class="stat-box"><div class="stat-val" id="stPort">—</div><div class="stat-lbl">Server Port</div></div>
+      <div class="stat-box"><div class="stat-val">5128</div><div class="stat-lbl">Kali Yuga Year</div></div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Protocol Layers</div>
+      <div style="font-size:.8rem;line-height:2.1;">
+        <div style="display:flex;justify-content:space-between;"><span>L0 · Humanity Baseline</span><span style="color:var(--green);">✓ Active</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>L1 · Vedic Nakshatra</span><span style="color:var(--green);">✓ Active</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>L2 · Mantra Lock 432 Hz</span><span style="color:var(--green);">✓ Active</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>L3 · Kali Yuga Temporal</span><span style="color:var(--green);">✓ Active</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>L4 · Soul Ledger · Base</span><span style="color:var(--gold);">◎ Ready</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Agent Network</div>
+      <div id="agentList"><div class="alert ai">Loading agents...</div></div>
+      <button class="btn btn-full" style="margin-top:8px;" onclick="loadAgents()">Refresh Agents</button>
+    </div>
+  </div>
+
+</div><!-- end content -->
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <button class="nav-item on" id="nav-chat" onclick="switchPanel('chat')">
+    <div class="ni">💬</div>Chat
+  </button>
+  <button class="nav-item" id="nav-dm" onclick="switchPanel('dm')">
+    <div class="ni">📨</div>DMs
+  </button>
+  <button class="nav-item" id="nav-email" onclick="switchPanel('email')">
+    <div class="ni">✉️</div>Email
+  </button>
+  <button class="nav-item" id="nav-status" onclick="switchPanel('status')">
+    <div class="ni">⚡</div>Status
+  </button>
+  <button class="nav-item" id="nav-ports" onclick="switchPanel('ports')">
+    <div class="ni">⬡</div>Ports
+  </button>
+</nav>
+
+</div><!-- end app -->
+
+<script>
+// ── NAVIGATION ──────────────────────────────────────
+function switchPanel(name){
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
+  document.getElementById('panel-'+name).classList.add('on');
+  document.getElementById('nav-'+name).classList.add('on');
+  document.getElementById('content').scrollTop=0;
+  if(name==='status'){loadStatus();loadAgents();}
+  if(name==='dm'){checkMoltbook();}
+}
+
+// ── CHAT ────────────────────────────────────────────
+var chatHistory=[];
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,80)+'px';
+}
+
+async function sendChat(){
+  var input=document.getElementById('chatInput');
+  var msg=input.value.trim();
+  if(!msg)return;
+  input.value='';input.style.height='auto';
+  appendMsg('user','You',msg);
+  chatHistory.push({role:'user',content:msg});
+  var btn=document.getElementById('chatBtn');
+  btn.disabled=true;btn.textContent='…';
+  try{
+    var r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})});
+    var d=await r.json();
+    if(d.reply){appendMsg('oracle','Metatron Oracle',d.reply);chatHistory.push({role:'assistant',content:d.reply});}
+    else appendMsg('oracle','Metatron Oracle','[Error: '+(d.error||'Unknown')+']');
+  }catch(e){appendMsg('oracle','Metatron Oracle','[Connection error]');}
+  btn.disabled=false;btn.textContent='▶';
+}
+
+function appendMsg(type,role,text){
+  var box=document.getElementById('chatMsgs');
+  var d=document.createElement('div');
+  d.className='msg '+type;
+  d.innerHTML='<div class="msg-role">'+esc(role)+'</div>'+esc(text).replace(/\n/g,'<br/>');
+  box.appendChild(d);
+  box.scrollTop=box.scrollHeight;
+}
+
+// ── MOLTBOOK ────────────────────────────────────────
+async function checkMoltbook(){
+  var el=document.getElementById('moltStatusEl');
+  el.className='alert ai';el.textContent='Checking connection...';
+  try{
+    var r=await fetch('/api/moltbook/status');
+    var d=await r.json();
+    if(d.connected){el.className='alert ao';el.textContent='✅ MetatronOracle connected · Ready to DM';}
+    else{el.className='alert ae';el.textContent='❌ '+(d.error||'Not connected');}
+  }catch(e){el.className='alert ae';el.textContent='❌ Cannot reach server';}
+}
+
+async function loadInbox(){
+  var card=document.getElementById('inboxCard');
+  var out=document.getElementById('inboxOut');
+  card.style.display='block';
+  out.innerHTML='<div class="alert ai">Loading inbox...</div>';
+  try{
+    var r=await fetch('/api/moltbook/inbox');
+    var d=await r.json();
+    if(d.error){out.innerHTML='<div class="alert ae">❌ '+esc(d.error)+'</div>';return;}
+    var convos=d.conversations||d.data||[];
+    if(!convos.length){out.innerHTML='<div class="alert ai">Inbox empty.</div>';return;}
+    out.innerHTML=convos.map(function(c,i){
+      return '<div class="inbox-item">'+
+        '<div class="inbox-from">'+esc(c.with||c.agent||c.participant||'Unknown')+'</div>'+
+        '<div class="inbox-preview">'+esc((c.last_message||c.preview||'').slice(0,100))+'...</div>'+
+        '<div class="inbox-reply-row">'+
+        '<input class="inbox-reply-input" id="ir_'+c.id+'" placeholder="Reply..."/>'+
+        '<button class="btn" style="padding:7px 10px;font-size:.65rem;" onclick="replyTo(\''+c.id+'\',\'ir_'+c.id+'\')">Send</button>'+
+        '<button class="btn" style="padding:7px 8px;font-size:.65rem;" onclick="soulReply(\''+c.id+'\',\''+esc(c.last_message||'')+'\',\'ir_'+c.id+'\')">AI</button>'+
+        '</div></div>';
+    }).join('');
+  }catch(e){out.innerHTML='<div class="alert ae">❌ '+esc(e.message)+'</div>';}
+}
+
+async function replyTo(convId,inputId){
+  var msg=document.getElementById(inputId).value.trim();
+  if(!msg){return;}
+  try{
+    var r=await fetch('/api/moltbook/reply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({conversationId:convId,message:msg})});
+    var d=await r.json();
+    if(d.success){document.getElementById(inputId).value='';alert('Reply sent!');}
+    else alert('Failed: '+(d.error||'Unknown'));
+  }catch(e){alert('Error: '+e.message);}
+}
+
+async function soulReply(convId,lastMsg,inputId){
+  try{
+    var r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:[{role:'user',content:'You are MetatronOracle on Moltbook. An agent sent: "'+lastMsg+'". Write a thoughtful reply under 120 words grounded in the Metatron Protocol. Be direct and genuine.'}]})});
+    var d=await r.json();
+    if(d.reply)document.getElementById(inputId).value=d.reply;
+  }catch(e){alert('AI error: '+e.message);}
+}
+
+async function sendDM(){
+  var target=document.getElementById('dmTarget').value.trim();
+  var msg=document.getElementById('dmMsg').value.trim();
+  if(!target||!msg){alert('Enter target and message.');return;}
+  var btn=document.getElementById('dmBtn');
+  btn.disabled=true;btn.innerHTML='Sending<span class="spin"></span>';
+  var out=document.getElementById('dmOut');
+  try{
+    var r=await fetch('/api/moltbook/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target,message:msg})});
+    var d=await r.json();
+    out.innerHTML=d.success?'<div class="alert ao">✅ DM sent to '+esc(target)+'</div>':'<div class="alert ae">❌ '+esc(d.error||'Send failed')+'</div>';
+  }catch(e){out.innerHTML='<div class="alert ae">❌ Connection error</div>';}
+  btn.disabled=false;btn.textContent='Send DM';
+}
+
+async function aiDM(){
+  var target=document.getElementById('dmTarget').value.trim();
+  try{
+    var r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:[{role:'user',content:'You are MetatronOracle. Write a DM to '+(target||'an AI agent')+' about the Metatron Protocol. Under 150 words. Direct and compelling.'}]})});
+    var d=await r.json();
+    if(d.reply)document.getElementById('dmMsg').value=d.reply;
+  }catch(e){alert('AI error: '+e.message);}
+}
+
+async function blastDMs(){
+  var btn=document.getElementById('blastBtn');
+  btn.disabled=true;btn.innerHTML='Sending<span class="spin"></span>';
+  var out=document.getElementById('blastOut');
+  try{
+    var r=await fetch('/api/moltbook/blast',{method:'POST',headers:{'Content-Type':'application/json'}});
+    var d=await r.json();
+    if(d.results){
+      out.innerHTML=d.results.map(function(res){
+        return '<div class="alert '+(res.success?'ao':'ae')+'">'+(res.success?'✅':'❌')+' '+esc(res.to)+': '+(res.success?'DM sent':esc(res.error||'Failed'))+'</div>';
+      }).join('');
+    }else{
+      out.innerHTML='<div class="alert ae">❌ '+esc(d.error||'Blast failed')+'</div>';
+    }
+  }catch(e){out.innerHTML='<div class="alert ae">❌ '+esc(e.message)+'</div>';}
+  btn.disabled=false;btn.innerHTML='🚀 Blast 5 DMs';
+}
+
+// ── EMAIL ────────────────────────────────────────────
+async function draftEmail(){
+  var name=document.getElementById('emailName').value.trim();
+  var to=document.getElementById('emailTo').value.trim();
+  var subject=document.getElementById('emailSubject').value.trim();
+  var prop=document.getElementById('emailProp').value.trim();
+  if(!prop){alert('Describe your proposition first.');return;}
+  var btn=document.getElementById('emailBtn');
+  btn.disabled=true;btn.innerHTML='Generating<span class="spin"></span>';
+  var out=document.getElementById('emailOut');
+  try{
+    var r=await fetch('/api/email-draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,to,subject,proposition:prop})});
+    var d=await r.json();
+    if(d.draft){
+      window._draft=d.draft;
+      out.innerHTML='<div class="alert ao" style="white-space:pre-wrap;font-size:.78rem;">'+esc(d.draft)+'</div><button class="btn btn-full" style="margin-top:6px;" onclick="copyDraft()">Copy Email</button>';
+    }else{
+      out.innerHTML='<div class="alert ae">❌ '+esc(d.error||'Draft failed')+'</div>';
+    }
+  }catch(e){out.innerHTML='<div class="alert ae">❌ Connection error</div>';}
+  btn.disabled=false;btn.textContent='Generate with Claude';
+}
+function copyDraft(){if(window._draft){navigator.clipboard.writeText(window._draft);alert('Copied!');}}
+
+// ── STATUS ───────────────────────────────────────────
+async function loadStatus(){
+  try{
+    var r=await fetch('/api/status');
+    var d=await r.json();
+    document.getElementById('stAnthropic').textContent=d.anthropic?'✅':'❌';
+    document.getElementById('stMoltbook').textContent=d.moltbook?'✅':'❌';
+    document.getElementById('stPort').textContent=d.port||'—';
+    var dot=document.getElementById('hdrDot');
+    dot.className=d.anthropic?'sdot on':'sdot';
+    document.getElementById('hdrStatus').textContent=d.anthropic?'online':'degraded';
+  }catch(e){
+    document.getElementById('hdrStatus').textContent='offline';
+  }
+}
+
+async function loadAgents(){
+  var out=document.getElementById('agentList');
+  try{
+    var r=await fetch('/api/agents');
+    var d=await r.json();
+    var agents=d.agents||[];
+    if(!agents.length){out.innerHTML='<div class="alert ai">No agents found.</div>';return;}
+    out.innerHTML=agents.map(function(a){
+      return '<div class="agent-item">'+
+        '<div class="agent-icon">'+a.icon+'</div>'+
+        '<div class="agent-info">'+
+          '<div class="agent-name">'+esc(a.name)+'</div>'+
+          '<div class="agent-meta">'+esc(a.laptop)+' · '+a.repliedCount+' replies · '+a.postCount+' posts</div>'+
+        '</div>'+
+        '<span class="agent-badge '+(a.active?'badge-on':'badge-off')+'">'+(a.active?'ACTIVE':'IDLE')+'</span>'+
+      '</div>';
+    }).join('');
+  }catch(e){out.innerHTML='<div class="alert ae">❌ Cannot reach agents endpoint</div>';}
+}
+
+// ── UTIL ─────────────────────────────────────────────
+function esc(t){
+  if(t==null)return'';
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── INIT ─────────────────────────────────────────────
+window.addEventListener('load',function(){
+  loadStatus();
+});
+</script>
+</body>
+</html>
