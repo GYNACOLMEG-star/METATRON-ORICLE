@@ -881,9 +881,16 @@ app.get('/sim', (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════
-//  DM — Founder Direct Line
+//  DM — Simple Moltbook DM Interface
 // ══════════════════════════════════════════════════════════
 app.get('/dm', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dm.html'));
+});
+
+// ══════════════════════════════════════════════════════════
+//  DM-FULL — Founder Direct Line (full-featured)
+// ══════════════════════════════════════════════════════════
+app.get('/dm-full', (req, res) => {
   res.sendFile(path.join(__dirname, 'founder-dm.html'));
 });
 
