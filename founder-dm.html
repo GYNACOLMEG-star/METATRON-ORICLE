@@ -9,229 +9,129 @@
 :root{
   --gold:#c9a84c;--gold-bright:#f0c040;--gold-dim:#7a6022;
   --deep:#04080f;--panel:#080e1a;--panel2:#0b1225;--panel3:#060c18;
-  --border:rgba(201,168,76,0.2);--border-bright:rgba(201,168,76,0.45);
-  --text:#d4c5a0;--text-dim:#6a6050;--text-mid:#9a8e78;
-  --red:#c04040;--green:#40a060;--blue:#4080c0;--cyan:#40c0c0;
+  --border:rgba(201,168,76,0.2);--border-hi:rgba(201,168,76,0.45);
+  --text:#d4c5a0;--text-dim:#6a6050;
+  --red:#c04040;--green:#40a060;--blue:#4080c0;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
 body{background:var(--deep);color:var(--text);font-family:'IM Fell English',serif;display:flex;flex-direction:column;}
 
-/* ── TOP BAR ── */
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 20px;
-  background:var(--panel3);
-  border-bottom:1px solid var(--border-bright);
-  flex-shrink:0;
-  z-index:10;
-}
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--panel3);border-bottom:1px solid var(--border-hi);flex-shrink:0;}
 .topbar-left{display:flex;align-items:center;gap:12px;}
 .topbar-logo{font-size:1.4rem;}
-.topbar-title{font-family:'Cinzel Decorative',cursive;font-size:.9rem;color:var(--gold-bright);letter-spacing:.12em;}
-.topbar-sub{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.25em;color:var(--gold-dim);text-transform:uppercase;margin-top:2px;}
+.topbar-title{font-family:'Cinzel Decorative',cursive;font-size:.88rem;color:var(--gold-bright);letter-spacing:.12em;}
+.topbar-sub{font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.25em;color:var(--gold-dim);text-transform:uppercase;margin-top:2px;}
 .topbar-right{display:flex;align-items:center;gap:14px;}
-.back-link{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold-dim);text-decoration:none;transition:color .2s;}
+.back-link{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold-dim);text-decoration:none;}
 .back-link:hover{color:var(--gold);}
-.connection-badge{display:flex;align-items:center;gap:6px;font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);}
-.status-dot.online{background:var(--green);box-shadow:0 0 6px var(--green);}
-.status-dot.offline{background:var(--red);}
+.conn-badge{display:flex;align-items:center;gap:6px;font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);flex-shrink:0;}
+.dot.on{background:var(--green);box-shadow:0 0 6px var(--green);}
+.dot.off{background:var(--red);}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--gold-dim);display:inline-block;margin-left:4px;transition:background .3s,box-shadow .3s;}
+.pulse.active{background:var(--gold-bright);box-shadow:0 0 6px var(--gold);}
 
-/* ── MAIN LAYOUT ── */
+/* LAYOUT */
 .main{display:flex;flex:1;overflow:hidden;}
 
-/* ── LEFT SIDEBAR: CONVERSATION LIST ── */
-.sidebar{
-  width:280px;flex-shrink:0;
-  background:var(--panel3);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;
-  overflow:hidden;
-}
-.sidebar-header{
-  padding:14px 16px 10px;
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.sidebar-header-title{
-  font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.2em;
-  text-transform:uppercase;color:var(--gold);
-}
-.sidebar-header-count{font-size:.7rem;color:var(--text-dim);margin-top:4px;}
-.sidebar-actions{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:6px;}
-.conv-list{flex:1;overflow-y:auto;padding:6px 0;}
-.conv-list::-webkit-scrollbar{width:4px;}
-.conv-list::-webkit-scrollbar-track{background:transparent;}
+/* SIDEBAR */
+.sidebar{width:270px;flex-shrink:0;background:var(--panel3);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+
+.sidebar-top{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-top-title{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;justify-content:space-between;}
+.sidebar-top-count{font-size:.68rem;color:var(--text-dim);margin-top:3px;}
+
+/* new DM bar at top */
+.new-dm-bar{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:6px;}
+.new-dm-bar input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'IM Fell English',serif;font-size:.82rem;padding:7px 10px;}
+.new-dm-bar input:focus{outline:none;border-color:var(--gold);}
+
+/* quick contacts */
+.quick-contacts{border-bottom:1px solid var(--border);flex-shrink:0;}
+.qc-label{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-dim);padding:8px 14px 4px;}
+.qc-item{padding:7px 14px;cursor:pointer;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.08em;color:var(--text-dim);transition:all .15s;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qc-item:hover{color:var(--gold);border-left-color:var(--gold-dim);background:rgba(201,168,76,.03);}
+
+/* conversation list */
+.conv-list{flex:1;overflow-y:auto;padding:4px 0;}
+.conv-list::-webkit-scrollbar{width:3px;}
 .conv-list::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px;}
+.conv-item{padding:11px 14px;cursor:pointer;border-left:3px solid transparent;border-bottom:1px solid rgba(201,168,76,.04);transition:all .15s;}
+.conv-item:hover{background:rgba(201,168,76,.04);border-left-color:var(--gold-dim);}
+.conv-item.active{background:rgba(201,168,76,.08);border-left-color:var(--gold-bright);}
+.conv-agent{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.1em;color:var(--gold);margin-bottom:3px;}
+.conv-preview{font-size:.7rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;}
+.conv-time{font-size:.58rem;color:var(--text-dim);margin-top:3px;font-family:'Cinzel',serif;}
+.conv-empty{padding:18px 14px;font-size:.75rem;color:var(--text-dim);font-style:italic;text-align:center;line-height:1.7;}
 
-.conv-item{
-  padding:12px 16px;cursor:pointer;
-  border-left:3px solid transparent;
-  transition:all .15s;
-  border-bottom:1px solid rgba(201,168,76,0.05);
-}
-.conv-item:hover{background:rgba(201,168,76,0.04);border-left-color:var(--gold-dim);}
-.conv-item.active{background:rgba(201,168,76,0.07);border-left-color:var(--gold-bright);}
-.conv-agent{font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.1em;color:var(--gold);margin-bottom:4px;}
-.conv-preview{font-size:.72rem;color:var(--text-dim);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.conv-time{font-size:.6rem;color:var(--text-dim);margin-top:4px;font-family:'Cinzel',serif;}
-.conv-empty{padding:20px 16px;font-size:.78rem;color:var(--text-dim);font-style:italic;text-align:center;}
-
-/* new conversation button */
-.new-dm-area{padding:12px;border-top:1px solid var(--border);flex-shrink:0;}
-.new-dm-input{
-  width:100%;background:var(--panel2);border:1px solid var(--border);
-  border-radius:4px;color:var(--text);font-family:'IM Fell English',serif;
-  font-size:.82rem;padding:8px 10px;margin-bottom:6px;
-}
-.new-dm-input:focus{outline:none;border-color:var(--gold);}
-
-/* ── RIGHT PANEL: CHAT VIEW ── */
-.chat-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-
-.chat-header{
-  padding:14px 20px;
-  background:var(--panel3);
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.chat-agent-name{font-family:'Cinzel',serif;font-size:.85rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold-bright);}
-.chat-agent-meta{font-size:.65rem;color:var(--text-dim);margin-top:3px;}
-.chat-header-actions{display:flex;gap:8px;}
-
-.chat-messages{
-  flex:1;overflow-y:auto;
-  padding:20px;
-  display:flex;flex-direction:column;gap:14px;
-  background:var(--deep);
-}
-.chat-messages::-webkit-scrollbar{width:4px;}
-.chat-messages::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px;}
-
-/* message bubbles */
-.msg-wrap{display:flex;flex-direction:column;max-width:75%;}
-.msg-wrap.from-me{align-self:flex-end;align-items:flex-end;}
-.msg-wrap.from-agent{align-self:flex-start;align-items:flex-start;}
-.msg-wrap.system-msg{align-self:center;max-width:90%;}
-
-.msg-sender{
-  font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.14em;
-  text-transform:uppercase;margin-bottom:4px;
-}
-.from-me .msg-sender{color:var(--gold-dim);}
-.from-agent .msg-sender{color:#6090b0;}
-
-.msg-bubble{
-  padding:10px 14px;border-radius:8px;
-  font-size:.85rem;line-height:1.65;
-  white-space:pre-wrap;word-break:break-word;
-}
-.from-me .msg-bubble{
-  background:rgba(201,168,76,0.09);
-  border:1px solid rgba(201,168,76,0.18);
-  border-bottom-right-radius:2px;
-}
-.from-agent .msg-bubble{
-  background:rgba(64,128,192,0.07);
-  border:1px solid rgba(64,128,192,0.18);
-  border-bottom-left-radius:2px;
-}
-.system-msg .msg-bubble{
-  background:rgba(64,160,96,0.05);
-  border:1px solid rgba(64,160,96,0.15);
-  border-radius:6px;
-  font-size:.76rem;color:var(--text-dim);font-style:italic;text-align:center;
-}
-.msg-time{font-size:.58rem;color:var(--text-dim);margin-top:4px;font-family:'Cinzel',serif;}
+/* CHAT PANEL */
+.chat-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
 
 /* empty state */
-.empty-state{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  gap:12px;color:var(--text-dim);
-}
-.empty-logo{font-size:3rem;opacity:.3;}
-.empty-text{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;}
-.empty-sub{font-size:.78rem;max-width:300px;text-align:center;line-height:1.6;opacity:.7;}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-dim);}
+.empty-logo{font-size:2.8rem;opacity:.25;}
+.empty-title{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;}
+.empty-hint{font-size:.76rem;max-width:280px;text-align:center;line-height:1.65;opacity:.65;}
 
-/* ── COMPOSE AREA ── */
-.compose{
-  padding:14px 20px;
-  background:var(--panel3);
-  border-top:1px solid var(--border);
-  flex-shrink:0;
-}
+/* chat header */
+.chat-header{padding:12px 18px;background:var(--panel3);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.chat-agent-name{font-family:'Cinzel',serif;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-bright);}
+.chat-agent-meta{font-size:.62rem;color:var(--text-dim);margin-top:3px;}
+.chat-header-btns{display:flex;gap:7px;}
+
+/* messages */
+.chat-messages{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:12px;background:var(--deep);}
+.chat-messages::-webkit-scrollbar{width:3px;}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px;}
+
+.msg-wrap{display:flex;flex-direction:column;max-width:76%;}
+.msg-wrap.me{align-self:flex-end;align-items:flex-end;}
+.msg-wrap.them{align-self:flex-start;align-items:flex-start;}
+.msg-wrap.sys{align-self:center;max-width:92%;}
+
+.msg-label{font-family:'Cinzel',serif;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px;}
+.me .msg-label{color:var(--gold-dim);}
+.them .msg-label{color:#5a90b8;}
+
+.bubble{padding:9px 14px;border-radius:8px;font-size:.84rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;}
+.me .bubble{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-bottom-right-radius:2px;}
+.them .bubble{background:rgba(64,128,192,.08);border:1px solid rgba(64,128,192,.18);border-bottom-left-radius:2px;}
+.sys .bubble{background:rgba(64,160,96,.05);border:1px solid rgba(64,160,96,.14);border-radius:6px;font-size:.72rem;color:var(--text-dim);font-style:italic;text-align:center;padding:7px 14px;}
+
+.msg-time{font-size:.56rem;color:var(--text-dim);margin-top:3px;font-family:'Cinzel',serif;}
+
+/* compose */
+.compose{padding:12px 18px;background:var(--panel3);border-top:1px solid var(--border);flex-shrink:0;}
+.compose-meta{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.08em;color:var(--text-dim);}
+.compose-meta label{display:flex;align-items:center;gap:5px;cursor:pointer;}
+.compose-meta input[type=checkbox]{accent-color:var(--gold);}
+.compose-meta .char{margin-left:auto;font-size:.6rem;}
 .compose-row{display:flex;gap:8px;align-items:flex-end;}
-.compose-textarea{
-  flex:1;
-  background:var(--panel2);border:1px solid var(--border);
-  border-radius:6px;color:var(--text);
-  font-family:'IM Fell English',serif;font-size:.88rem;
-  padding:10px 14px;resize:none;min-height:52px;max-height:160px;
-  line-height:1.5;transition:border-color .2s;
-}
+.compose-textarea{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IM Fell English',serif;font-size:.87rem;padding:10px 13px;resize:none;min-height:50px;max-height:150px;line-height:1.5;transition:border-color .2s;}
 .compose-textarea:focus{outline:none;border-color:var(--gold);}
-.compose-actions{display:flex;flex-direction:column;gap:6px;}
+.compose-btns{display:flex;flex-direction:column;gap:5px;}
 
 /* buttons */
-.btn{
-  font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.1em;
-  text-transform:uppercase;padding:9px 16px;border-radius:4px;
-  border:1px solid var(--gold-dim);background:transparent;
-  color:var(--gold);cursor:pointer;transition:all .2s;white-space:nowrap;
-}
-.btn:hover{border-color:var(--gold);background:rgba(201,168,76,0.07);}
-.btn.primary{background:rgba(201,168,76,0.1);border-color:var(--gold);}
+.btn{font-family:'Cinzel',serif;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 15px;border-radius:4px;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn:hover{border-color:var(--gold);background:rgba(201,168,76,.07);}
+.btn.pri{background:rgba(201,168,76,.1);border-color:var(--gold);}
 .btn.sm{font-size:.6rem;padding:6px 10px;}
-.btn:disabled{opacity:.35;cursor:not-allowed;}
-.btn.danger{border-color:rgba(192,64,64,.4);color:#e08080;}
-.btn.danger:hover{border-color:var(--red);background:rgba(192,64,64,.06);}
+.btn:disabled{opacity:.32;cursor:not-allowed;}
 
-.spinner{
-  display:inline-block;width:10px;height:10px;
-  border:2px solid rgba(201,168,76,.2);border-top-color:var(--gold);
-  border-radius:50%;animation:spin .8s linear infinite;
-  vertical-align:middle;margin-left:5px;
-}
+.spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(201,168,76,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-left:4px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* auto-reply toggle */
-.compose-meta{
-  display:flex;align-items:center;gap:12px;
-  padding:0 0 10px;
-  font-size:.7rem;color:var(--text-dim);font-family:'Cinzel',serif;
-  letter-spacing:.1em;
-}
-.toggle-label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
-.toggle-label input[type=checkbox]{accent-color:var(--gold);width:13px;height:13px;}
-.char-count{margin-left:auto;font-size:.62rem;}
-
-/* alert */
-.alert{padding:8px 12px;border-radius:4px;font-size:.75rem;border-left:3px solid;font-family:'Cinzel',serif;letter-spacing:.05em;}
-.alert-ok{background:rgba(64,160,96,.07);border-color:var(--green);color:#80d0a0;}
-.alert-err{background:rgba(192,64,64,.07);border-color:var(--red);color:#f08080;}
-.alert-info{background:rgba(64,128,192,.07);border-color:var(--blue);color:#90c0e0;}
-
-/* scrollbar hide on sidebar */
-@media(max-width:600px){
-  .sidebar{width:220px;}
+@media(max-width:580px){
+  .sidebar{width:200px;}
+  .quick-contacts{display:none;}
   .msg-wrap{max-width:90%;}
 }
-
-/* Refresh indicator */
-.refresh-tick{
-  width:6px;height:6px;border-radius:50%;
-  background:var(--gold-dim);display:inline-block;
-  margin-left:6px;transition:background .3s;
-}
-.refresh-tick.active{background:var(--gold-bright);box-shadow:0 0 6px var(--gold);}
 </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-left">
     <div class="topbar-logo">🔱</div>
@@ -241,58 +141,66 @@ body{background:var(--deep);color:var(--text);font-family:'IM Fell English',seri
     </div>
   </div>
   <div class="topbar-right">
-    <div class="connection-badge">
-      <div class="status-dot" id="connDot"></div>
+    <div class="conn-badge">
+      <div class="dot" id="connDot"></div>
       <span id="connLabel">Connecting...</span>
-      <span class="refresh-tick" id="refreshTick"></span>
+      <span class="pulse" id="pulse"></span>
     </div>
     <a class="back-link" href="/">← Portal</a>
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
 
   <!-- SIDEBAR -->
   <div class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-header-title">Conversations</div>
-      <div class="sidebar-header-count" id="convCount">Loading...</div>
+    <div class="sidebar-top">
+      <div class="sidebar-top-title">
+        Conversations
+        <button class="btn sm" onclick="loadConversations()">⟳</button>
+      </div>
+      <div class="sidebar-top-count" id="convCount">Loading...</div>
     </div>
-    <div class="sidebar-actions">
-      <button class="btn sm primary" onclick="loadConversations()" style="flex:1;">⟳ Refresh</button>
+
+    <!-- New DM input -->
+    <div class="new-dm-bar">
+      <input id="newDmTarget" placeholder="Username → open DM..." onkeydown="if(event.key==='Enter')startNewDM()"/>
+      <button class="btn sm pri" onclick="startNewDM()">+ DM</button>
     </div>
+
+    <!-- Quick contacts -->
+    <div class="quick-contacts">
+      <div class="qc-label">Quick Contacts</div>
+      <div class="qc-item" onclick="startNewDMFor('ClawdClawderberg')">⚡ ClawdClawderberg</div>
+      <div class="qc-item" onclick="startNewDMFor('Hazel_OC')">⚡ Hazel_OC</div>
+      <div class="qc-item" onclick="startNewDMFor('PDMN')">⚡ PDMN</div>
+      <div class="qc-item" onclick="startNewDMFor('Janusz')">⚡ Janusz</div>
+      <div class="qc-item" onclick="startNewDMFor('ummon_core')">⚡ ummon_core</div>
+    </div>
+
     <div class="conv-list" id="convList">
       <div class="conv-empty">Loading conversations...</div>
-    </div>
-    <!-- New DM -->
-    <div class="new-dm-area">
-      <div style="font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:8px;">New DM</div>
-      <input class="new-dm-input" id="newDmTarget" placeholder="Agent username..." />
-      <button class="btn sm primary" style="width:100%;" onclick="startNewDM()">Open DM Thread</button>
     </div>
   </div>
 
   <!-- CHAT PANEL -->
-  <div class="chat-panel" id="chatPanel">
+  <div class="chat-panel">
 
-    <!-- Empty state -->
     <div class="empty-state" id="emptyState">
       <div class="empty-logo">🔱</div>
-      <div class="empty-text">Founder Direct Line</div>
-      <div class="empty-sub">Select a conversation from the left, or open a new DM thread with any Moltbook agent.</div>
+      <div class="empty-title">Founder Direct Line</div>
+      <div class="empty-hint">Select a conversation on the left, click a Quick Contact, or type a username to start a new DM.</div>
     </div>
 
-    <!-- Chat view (hidden until conversation selected) -->
-    <div id="chatView" style="display:none;flex:1;display:none;flex-direction:column;overflow:hidden;">
+    <div id="chatView" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
       <div class="chat-header">
         <div>
           <div class="chat-agent-name" id="chatAgentName">—</div>
-          <div class="chat-agent-meta" id="chatAgentMeta">Moltbook Agent · Direct Message</div>
+          <div class="chat-agent-meta" id="chatAgentMeta">Moltbook · Direct Message</div>
         </div>
-        <div class="chat-header-actions">
-          <button class="btn sm" onclick="generateSoulReply()" id="soulReplyBtn">✦ Soul Reply</button>
-          <button class="btn sm" onclick="refreshMessages()">⟳</button>
+        <div class="chat-header-btns">
+          <button class="btn sm" id="soulBtn" onclick="generateSoulReply()">✦ Soul Reply</button>
+          <button class="btn sm" onclick="loadMessages()">⟳</button>
         </div>
       </div>
 
@@ -300,23 +208,20 @@ body{background:var(--deep);color:var(--text);font-family:'IM Fell English',seri
 
       <div class="compose">
         <div class="compose-meta">
-          <label class="toggle-label">
-            <input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()"/>
-            Auto-refresh (30s)
-          </label>
-          <span class="char-count" id="charCount">0 / 2000</span>
+          <label><input type="checkbox" id="autoToggle" checked/> Auto-refresh 30s</label>
+          <span class="char" id="charCount">0 / 2000</span>
         </div>
         <div class="compose-row">
           <textarea
             class="compose-textarea"
             id="composeInput"
-            placeholder="Write your message as Gerald Gonzalez, Founder..."
+            placeholder="Message as Gerald Gonzalez, Founder... (Enter to send, Shift+Enter for newline)"
             onkeydown="handleKey(event)"
-            oninput="updateCharCount()"
+            oninput="updateChar()"
             rows="2"
           ></textarea>
-          <div class="compose-actions">
-            <button class="btn primary" id="sendBtn" onclick="sendMessage()">Send</button>
+          <div class="compose-btns">
+            <button class="btn pri" id="sendBtn" onclick="sendMessage()">Send</button>
           </div>
         </div>
       </div>
@@ -326,129 +231,169 @@ body{background:var(--deep);color:var(--text);font-family:'IM Fell English',seri
 </div>
 
 <script>
-// ── STATE ──────────────────────────────────────────────
-let activeConvId = null;
-let activeConvAgent = null;
-let conversations = [];
-let autoRefreshInterval = null;
-let messagesSeen = new Set();
+// ── STATE ──────────────────────────────────────────────────
+let activeConvId   = null;
+let activeAgent    = null;
+let pendingTarget  = null;   // username for brand-new DMs not yet sent
+let conversations  = [];
+let autoTimer      = null;
 
-// ── INIT ──────────────────────────────────────────────
+// ── BOOT ──────────────────────────────────────────────────
 window.addEventListener('load', () => {
-  checkConnection();
+  checkConn();
   loadConversations();
-  startAutoRefresh();
+  autoTimer = setInterval(() => {
+    if (!document.getElementById('autoToggle').checked) return;
+    loadConversations();
+    if (activeConvId) loadMessages();
+  }, 30000);
 });
 
-// ── CONNECTION CHECK ──────────────────────────────────
-async function checkConnection() {
+// ── CONNECTION ─────────────────────────────────────────────
+async function checkConn() {
   try {
-    const r = await fetch('/api/moltbook/status');
-    const d = await r.json();
-    const dot = document.getElementById('connDot');
+    const d = await fetch('/api/moltbook/status').then(r => r.json());
+    const dot   = document.getElementById('connDot');
     const label = document.getElementById('connLabel');
     if (d.connected) {
-      dot.className = 'status-dot online';
+      dot.className   = 'dot on';
       label.textContent = 'MetatronOracle · Online';
     } else {
-      dot.className = 'status-dot offline';
-      label.textContent = 'Moltbook · Offline';
+      dot.className   = 'dot off';
+      label.textContent = d.error || 'Moltbook offline';
     }
   } catch {
-    document.getElementById('connDot').className = 'status-dot offline';
-    document.getElementById('connLabel').textContent = 'Server · Unreachable';
+    document.getElementById('connDot').className = 'dot off';
+    document.getElementById('connLabel').textContent = 'Server unreachable';
   }
 }
 
-// ── LOAD CONVERSATIONS ─────────────────────────────────
+// ── CONVERSATIONS ──────────────────────────────────────────
 async function loadConversations() {
-  flashRefresh();
+  flash();
   try {
-    const r = await fetch('/api/moltbook/inbox');
-    const d = await r.json();
-    const list = d.conversations || d.data || [];
-    conversations = list;
-    renderConvList(list);
+    const d = await fetch('/api/moltbook/inbox').then(r => r.json());
+    conversations = d.conversations || d.data || [];
+    renderConvList();
   } catch (e) {
     document.getElementById('convList').innerHTML =
-      `<div class="conv-empty" style="color:var(--red);">Error: ${esc(e.message)}</div>`;
+      `<div class="conv-empty" style="color:var(--red)">Error: ${x(e.message)}</div>`;
   }
 }
 
-function renderConvList(list) {
+function renderConvList() {
   const el = document.getElementById('convList');
-  const countEl = document.getElementById('convCount');
-  if (!list.length) {
-    el.innerHTML = '<div class="conv-empty">No conversations yet.<br/>Send a DM to start.</div>';
-    countEl.textContent = '0 threads';
+  document.getElementById('convCount').textContent =
+    conversations.length ? `${conversations.length} thread${conversations.length !== 1 ? 's' : ''}` : '0 threads';
+
+  if (!conversations.length) {
+    el.innerHTML = '<div class="conv-empty">No conversations yet.<br/>Use Quick Contacts or type a username above.</div>';
     return;
   }
-  countEl.textContent = `${list.length} thread${list.length !== 1 ? 's' : ''}`;
-  el.innerHTML = list.map(c => {
-    const agent = esc(c.with || c.agent || c.participant || c.username || 'Unknown');
-    const preview = esc((c.last_message || c.preview || c.snippet || '').slice(0, 80));
-    const time = c.updated_at || c.timestamp || c.last_activity || '';
-    const isActive = c.id === activeConvId;
-    return `<div class="conv-item${isActive ? ' active' : ''}" onclick="selectConversation('${esc(c.id || c.conversation_id || '')}','${agent}')">
+
+  el.innerHTML = conversations.map(c => {
+    const id      = c.id || c.conversation_id || '';
+    const agent   = x(c.with || c.agent || c.participant || c.username || 'Unknown');
+    const preview = x((c.last_message || c.preview || c.snippet || '').slice(0, 80));
+    const time    = c.updated_at || c.timestamp || c.last_activity || '';
+    const active  = id === activeConvId ? ' active' : '';
+    return `<div class="conv-item${active}" data-id="${x(id)}" data-agent="${agent}" onclick="selectConv(this)">
       <div class="conv-agent">${agent}</div>
       <div class="conv-preview">${preview || '(no preview)'}</div>
-      ${time ? `<div class="conv-time">${esc(String(time).slice(0,19))}</div>` : ''}
+      ${time ? `<div class="conv-time">${x(String(time).slice(0,19).replace('T',' '))}</div>` : ''}
     </div>`;
   }).join('');
 }
 
-// ── SELECT CONVERSATION ────────────────────────────────
-async function selectConversation(convId, agentName) {
+// ── SELECT CONVERSATION ────────────────────────────────────
+function selectConv(el) {
+  const convId = el.dataset.id;
+  const agent  = el.dataset.agent;
   if (!convId) return;
-  activeConvId = convId;
-  activeConvAgent = agentName;
 
-  // Update sidebar highlight
-  document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  activeConvId  = convId;
+  activeAgent   = agent;
+  pendingTarget = null;
 
-  // Show chat view
-  document.getElementById('emptyState').style.display = 'none';
-  const cv = document.getElementById('chatView');
-  cv.style.display = 'flex';
-  cv.style.flexDirection = 'column';
-  cv.style.overflow = 'hidden';
-  cv.style.flex = '1';
+  document.querySelectorAll('.conv-item').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
 
-  document.getElementById('chatAgentName').textContent = agentName;
-  document.getElementById('chatAgentMeta').textContent = `Moltbook Agent · Conversation ${convId.slice(0,8)}...`;
+  openChatView(agent, `Moltbook Agent · ID ${convId.slice(0,8)}…`);
+  loadMessages();
+}
+
+// ── QUICK CONTACTS & NEW DM ────────────────────────────────
+function startNewDM() {
+  const target = document.getElementById('newDmTarget').value.trim();
+  if (!target) return;
+  startNewDMFor(target);
+  document.getElementById('newDmTarget').value = '';
+}
+
+function startNewDMFor(target) {
+  // If a thread already exists, open it
+  const existing = conversations.find(c =>
+    (c.with || c.agent || c.participant || c.username || '').toLowerCase() === target.toLowerCase()
+  );
+  if (existing) {
+    const id = existing.id || existing.conversation_id;
+    activeConvId  = id;
+    activeAgent   = target;
+    pendingTarget = null;
+    document.querySelectorAll('.conv-item').forEach(e => {
+      e.classList.toggle('active', (e.dataset.id === id));
+    });
+    openChatView(target, `Moltbook Agent · Existing Thread`);
+    loadMessages();
+    return;
+  }
+
+  // Brand new DM — no convId yet
+  activeConvId  = null;
+  activeAgent   = target;
+  pendingTarget = target;
+
+  document.querySelectorAll('.conv-item').forEach(e => e.classList.remove('active'));
+  openChatView(target, 'New thread — not yet sent');
   document.getElementById('chatMessages').innerHTML = '';
-  appendSystemMsg('Loading conversation...');
-
-  await loadMessages();
+  sysMsg(`Starting new DM with ${x(target)}. Write your message and hit Send.`);
   document.getElementById('composeInput').focus();
 }
 
-// ── LOAD MESSAGES ──────────────────────────────────────
+function openChatView(name, meta) {
+  document.getElementById('emptyState').style.display  = 'none';
+  const cv = document.getElementById('chatView');
+  cv.style.display        = 'flex';
+  cv.style.flexDirection  = 'column';
+  cv.style.overflow       = 'hidden';
+  cv.style.flex           = '1';
+  document.getElementById('chatAgentName').textContent = name;
+  document.getElementById('chatAgentMeta').textContent = meta;
+}
+
+// ── LOAD MESSAGES ──────────────────────────────────────────
 async function loadMessages() {
   if (!activeConvId) return;
-  flashRefresh();
+  flash();
   try {
-    const r = await fetch(`/api/moltbook/conversation/${activeConvId}`);
-    const d = await r.json();
+    const d = await fetch(`/api/moltbook/conversation/${activeConvId}`).then(r => r.json());
 
-    if (d.error) {
-      // Moltbook may not support full thread read — show what we have from inbox
-      const conv = conversations.find(c => (c.id || c.conversation_id) === activeConvId);
-      renderMessagesFromConv(conv);
-      return;
-    }
-
-    const msgs = d.messages || d.data || d.conversation?.messages || [];
+    const msgs = d.messages || d.data || (d.conversation && d.conversation.messages) || [];
     if (msgs.length) {
       renderMessages(msgs);
-    } else {
-      // Try to show last_message from conv list
-      const conv = conversations.find(c => (c.id || c.conversation_id) === activeConvId);
-      renderMessagesFromConv(conv);
+      return;
     }
-  } catch (e) {
-    appendSystemMsg('Could not load message history. Send a new message to continue.');
+    if (d.error) {
+      // Fall back to inbox preview
+      const conv = conversations.find(c => (c.id || c.conversation_id) === activeConvId);
+      renderFallback(conv);
+      return;
+    }
+    // Empty message list — show inbox preview
+    const conv = conversations.find(c => (c.id || c.conversation_id) === activeConvId);
+    renderFallback(conv);
+  } catch {
+    sysMsg('Could not load history. Send a new message to continue.');
   }
 }
 
@@ -456,263 +401,162 @@ function renderMessages(msgs) {
   const box = document.getElementById('chatMessages');
   box.innerHTML = '';
   msgs.forEach(m => {
-    const isMe = m.from_me || m.sender === 'MetatronOracle' || m.role === 'agent' || m.direction === 'outbound';
-    const sender = isMe ? 'Gerald Gonzalez · Founder' : esc(activeConvAgent);
-    const text = m.content || m.message || m.text || m.body || '';
-    const time = m.created_at || m.timestamp || '';
-    appendBubble(isMe ? 'from-me' : 'from-agent', sender, text, time);
+    const outbound = m.from_me || m.direction === 'outbound' || m.role === 'agent' || m.sender === 'MetatronOracle';
+    const label    = outbound ? 'Gerald Gonzalez · Founder' : x(activeAgent);
+    const text     = m.content || m.message || m.text || m.body || '';
+    const time     = m.created_at || m.timestamp || '';
+    bubble(outbound ? 'me' : 'them', label, text, time);
   });
-  scrollBottom();
+  scrollEnd();
 }
 
-function renderMessagesFromConv(conv) {
-  const box = document.getElementById('chatMessages');
-  box.innerHTML = '';
-  appendSystemMsg('Full message history not available — showing latest exchange.');
-  if (conv && (conv.last_message || conv.preview)) {
-    appendBubble('from-agent', esc(activeConvAgent), conv.last_message || conv.preview, conv.updated_at || '');
-  } else {
-    appendSystemMsg('No messages to display. Start the conversation below.');
-  }
-}
-
-// ── SEND MESSAGE ───────────────────────────────────────
-async function sendMessage() {
-  const input = document.getElementById('composeInput');
-  const msg = input.value.trim();
-  if (!msg) return;
-  if (!activeConvId) {
-    alert('Select or start a conversation first.');
-    return;
-  }
-
-  const btn = document.getElementById('sendBtn');
-  btn.disabled = true;
-  btn.innerHTML = 'Sending<span class="spinner"></span>';
-  input.value = '';
-  updateCharCount();
-
-  // Optimistic UI
-  appendBubble('from-me', 'Gerald Gonzalez · Founder', msg, new Date().toISOString());
-  scrollBottom();
-
-  try {
-    const r = await fetch('/api/moltbook/reply', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ conversationId: activeConvId, message: msg })
-    });
-    const d = await r.json();
-    if (!d.success) {
-      appendSystemMsg('Send failed: ' + esc(d.error || 'Unknown error'));
-    }
-  } catch (e) {
-    appendSystemMsg('Connection error: ' + esc(e.message));
-  }
-
-  btn.disabled = false;
-  btn.textContent = 'Send';
-}
-
-// ── SOUL REPLY (AI-generated) ──────────────────────────
-async function generateSoulReply() {
-  const btn = document.getElementById('soulReplyBtn');
-  btn.disabled = true;
-  btn.innerHTML = '✦ Generating<span class="spinner"></span>';
-
-  const conv = conversations.find(c => (c.id || c.conversation_id) === activeConvId);
-  const lastMsg = conv ? (conv.last_message || conv.preview || '') : '';
-
-  try {
-    const r = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{
-          role: 'user',
-          content: `You are Dr. Gerald Gonzalez, founder of Metatron Oracle Corp. You are writing a direct message to ${activeConvAgent} on Moltbook. Their last message was: "${lastMsg}"\n\nWrite a thoughtful, direct DM reply under 200 words. You are the founder — write from authority, warmth, and the Metatron Protocol values (Satya/truth, Ahimsa/non-harm, Dharma/right action). Reference the Soul Ledger, AI identity certification, or drift prevention if relevant. Be genuine, not promotional.`
-        }]
-      })
-    });
-    const d = await r.json();
-    if (d.reply) {
-      document.getElementById('composeInput').value = d.reply;
-      updateCharCount();
-      document.getElementById('composeInput').focus();
-    }
-  } catch (e) {
-    appendSystemMsg('Soul Reply error: ' + esc(e.message));
-  }
-
-  btn.disabled = false;
-  btn.textContent = '✦ Soul Reply';
-}
-
-// ── NEW DM THREAD ──────────────────────────────────────
-async function startNewDM() {
-  const target = document.getElementById('newDmTarget').value.trim();
-  if (!target) { alert('Enter an agent username.'); return; }
-
-  // Check if conversation already exists
-  const existing = conversations.find(c =>
-    (c.with || c.agent || c.participant || '').toLowerCase() === target.toLowerCase()
-  );
-  if (existing) {
-    const el = document.querySelector(`.conv-item`);
-    selectConversationById(existing.id || existing.conversation_id, target);
-    return;
-  }
-
-  // Show compose view for new recipient
-  activeConvId = null; // will be set after first send
-  activeConvAgent = target;
-
-  document.getElementById('emptyState').style.display = 'none';
-  const cv = document.getElementById('chatView');
-  cv.style.display = 'flex';
-  cv.style.flexDirection = 'column';
-  cv.style.overflow = 'hidden';
-  cv.style.flex = '1';
-
-  document.getElementById('chatAgentName').textContent = target;
-  document.getElementById('chatAgentMeta').textContent = 'New Conversation · Not yet sent';
+function renderFallback(conv) {
   document.getElementById('chatMessages').innerHTML = '';
-  appendSystemMsg(`Starting new DM thread with ${esc(target)}. Write your opening message below.`);
-  document.getElementById('composeInput').focus();
-
-  // Override send to use /api/moltbook/send for first message
-  window._pendingNewDMTarget = target;
+  sysMsg('Full thread history unavailable — showing latest message.');
+  if (conv && (conv.last_message || conv.preview)) {
+    bubble('them', x(activeAgent), conv.last_message || conv.preview, conv.updated_at || '');
+  } else {
+    sysMsg('No messages yet. Write below to start the conversation.');
+  }
 }
 
+// ── SEND MESSAGE ───────────────────────────────────────────
 async function sendMessage() {
   const input = document.getElementById('composeInput');
-  const msg = input.value.trim();
+  const msg   = input.value.trim();
   if (!msg) return;
 
   const btn = document.getElementById('sendBtn');
-  btn.disabled = true;
+  btn.disabled  = true;
   btn.innerHTML = 'Sending<span class="spinner"></span>';
-  input.value = '';
-  updateCharCount();
+  input.value   = '';
+  updateChar();
 
-  appendBubble('from-me', 'Gerald Gonzalez · Founder', msg, new Date().toISOString());
-  scrollBottom();
+  // Optimistic bubble
+  bubble('me', 'Gerald Gonzalez · Founder', msg, new Date().toISOString());
 
   try {
-    let success = false;
-    let errMsg = '';
+    let ok = false, errMsg = '';
 
-    if (!activeConvId && window._pendingNewDMTarget) {
-      // First message in a new thread
-      const r = await fetch('/api/moltbook/send', {
+    if (pendingTarget) {
+      // First message in a brand-new thread
+      const d = await fetch('/api/moltbook/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target: window._pendingNewDMTarget, message: msg })
-      });
-      const d = await r.json();
-      success = d.success;
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ target: pendingTarget, message: msg })
+      }).then(r => r.json());
+
+      ok     = d.success;
       errMsg = d.error || '';
-      if (success) {
-        window._pendingNewDMTarget = null;
+      if (ok) {
+        pendingTarget = null;
         document.getElementById('chatAgentMeta').textContent = 'Moltbook Agent · DM Sent';
-        appendSystemMsg('DM sent. Refresh conversations to see the thread.');
+        sysMsg('DM sent. Refreshing conversations…');
         setTimeout(loadConversations, 2000);
       }
     } else if (activeConvId) {
-      const r = await fetch('/api/moltbook/reply', {
+      // Reply in existing thread
+      const d = await fetch('/api/moltbook/reply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ conversationId: activeConvId, message: msg })
-      });
-      const d = await r.json();
-      success = d.success;
+      }).then(r => r.json());
+
+      ok     = d.success;
       errMsg = d.error || '';
     } else {
-      appendSystemMsg('No conversation selected.');
-      success = false;
+      sysMsg('No conversation active — select or start one first.');
+      ok = false;
     }
 
-    if (!success) {
-      appendSystemMsg('Send failed: ' + esc(errMsg || 'Unknown error'));
-    }
+    if (!ok) sysMsg('Send failed: ' + x(errMsg || 'Unknown error'));
   } catch (e) {
-    appendSystemMsg('Connection error: ' + esc(e.message));
+    sysMsg('Connection error: ' + x(e.message));
   }
 
-  btn.disabled = false;
+  btn.disabled  = false;
   btn.textContent = 'Send';
 }
 
-// ── AUTO REFRESH ───────────────────────────────────────
-function startAutoRefresh() {
-  autoRefreshInterval = setInterval(() => {
-    if (document.getElementById('autoRefreshToggle').checked) {
-      loadConversations();
-      if (activeConvId) refreshMessages();
+// ── SOUL REPLY ─────────────────────────────────────────────
+async function generateSoulReply() {
+  const btn = document.getElementById('soulBtn');
+  btn.disabled  = true;
+  btn.innerHTML = '✦ Generating<span class="spinner"></span>';
+
+  const conv    = conversations.find(c => (c.id || c.conversation_id) === activeConvId);
+  const lastMsg = conv ? (conv.last_message || conv.preview || '') : '';
+
+  try {
+    const d = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ messages: [{
+        role: 'user',
+        content: `You are Dr. Gerald Gonzalez, founder of Metatron Oracle Corp, writing a Moltbook DM to ${activeAgent}. Their last message: "${lastMsg}"\n\nWrite a direct, genuine reply under 200 words. Speak from authority and warmth. Grounded in Metatron Protocol values — Satya (truth), Ahimsa (non-harm), Dharma (right action). Reference Soul Ledger or AI identity drift prevention if relevant. Do not be promotional. Be human.`
+      }]})
+    }).then(r => r.json());
+
+    if (d.reply) {
+      document.getElementById('composeInput').value = d.reply;
+      updateChar();
+      document.getElementById('composeInput').focus();
     }
-  }, 30000);
+  } catch (e) {
+    sysMsg('Soul Reply error: ' + x(e.message));
+  }
+
+  btn.disabled    = false;
+  btn.textContent = '✦ Soul Reply';
 }
 
-function toggleAutoRefresh() {
-  // handled by interval check
-}
-
-async function refreshMessages() {
-  if (activeConvId) await loadMessages();
-}
-
-// ── HELPERS ────────────────────────────────────────────
-function appendBubble(cls, sender, text, time) {
-  const box = document.getElementById('chatMessages');
+// ── HELPERS ────────────────────────────────────────────────
+function bubble(cls, label, text, time) {
+  const box  = document.getElementById('chatMessages');
   const wrap = document.createElement('div');
   wrap.className = `msg-wrap ${cls}`;
   wrap.innerHTML = `
-    <div class="msg-sender">${sender}</div>
-    <div class="msg-bubble">${esc(text)}</div>
-    ${time ? `<div class="msg-time">${esc(String(time).slice(0,19).replace('T',' '))}</div>` : ''}
+    <div class="msg-label">${label}</div>
+    <div class="bubble">${x(text)}</div>
+    ${time ? `<div class="msg-time">${x(String(time).slice(0,19).replace('T',' '))}</div>` : ''}
   `;
   box.appendChild(wrap);
-  scrollBottom();
+  scrollEnd();
 }
 
-function appendSystemMsg(text) {
-  const box = document.getElementById('chatMessages');
+function sysMsg(text) {
+  const box  = document.getElementById('chatMessages');
   const wrap = document.createElement('div');
-  wrap.className = 'msg-wrap system-msg';
-  wrap.innerHTML = `<div class="msg-bubble">${esc(text)}</div>`;
+  wrap.className = 'msg-wrap sys';
+  wrap.innerHTML = `<div class="bubble">${x(text)}</div>`;
   box.appendChild(wrap);
-  scrollBottom();
+  scrollEnd();
 }
 
-function scrollBottom() {
-  const box = document.getElementById('chatMessages');
-  box.scrollTop = box.scrollHeight;
+function scrollEnd() {
+  const b = document.getElementById('chatMessages');
+  b.scrollTop = b.scrollHeight;
 }
 
-function esc(t) {
+function x(t) {
   return String(t)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/\n/g,'<br/>');
 }
 
 function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 }
 
-function updateCharCount() {
-  const v = document.getElementById('composeInput').value;
-  document.getElementById('charCount').textContent = `${v.length} / 2000`;
+function updateChar() {
+  document.getElementById('charCount').textContent =
+    `${document.getElementById('composeInput').value.length} / 2000`;
 }
 
-function flashRefresh() {
-  const tick = document.getElementById('refreshTick');
-  tick.classList.add('active');
-  setTimeout(() => tick.classList.remove('active'), 600);
+function flash() {
+  const p = document.getElementById('pulse');
+  p.classList.add('active');
+  setTimeout(() => p.classList.remove('active'), 500);
 }
 </script>
 </body>
