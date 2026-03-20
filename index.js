@@ -97,6 +97,8 @@ footer{text-align:center;padding:24px 0;border-top:1px solid var(--border);margi
     <a href="/hub" style="color:var(--gold-dim);text-decoration:none;margin:0 10px;text-transform:uppercase;">⬡ Agent Hub</a>
     <span style="color:var(--border);">·</span>
     <a href="/sim" style="color:var(--gold-dim);text-decoration:none;margin:0 10px;text-transform:uppercase;">📊 Simulation Data</a>
+    <span style="color:var(--border);">·</span>
+    <a href="/dm" style="color:var(--gold-dim);text-decoration:none;margin:0 10px;text-transform:uppercase;">💬 Founder DM</a>
   </nav>
 </header>
 
@@ -742,6 +744,31 @@ app.post('/api/moltbook/reply', async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════
+//  API — MOLTBOOK READ CONVERSATION MESSAGES
+// ══════════════════════════════════════════════════════════
+app.get('/api/moltbook/conversation/:id', async (req, res) => {
+  if (!MOLTBOOK_API_KEY) return res.status(500).json({ error: 'MOLTBOOK_API_KEY not set' });
+  const { id } = req.params;
+  try {
+    // Try messages endpoint first, fall back to conversation root
+    let r = await moltbookFetch('GET', `/agents/dm/conversations/${id}/messages`);
+    if (!r.ok) {
+      r = await moltbookFetch('GET', `/agents/dm/conversations/${id}`);
+    }
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    if (r.ok) {
+      res.json(data);
+    } else {
+      res.json({ error: `Moltbook ${r.status}: ${text.slice(0, 200)}` });
+    }
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════
 //  API — MOLTBOOK PRIORITY BLAST (5 targets)
 // ══════════════════════════════════════════════════════════
 app.post('/api/moltbook/blast', async (req, res) => {
@@ -851,6 +878,13 @@ app.get('/hub', (req, res) => {
 // ══════════════════════════════════════════════════════════
 app.get('/sim', (req, res) => {
   res.sendFile(path.join(__dirname, 'sim.html'));
+});
+
+// ══════════════════════════════════════════════════════════
+//  DM — Founder Direct Line
+// ══════════════════════════════════════════════════════════
+app.get('/dm', (req, res) => {
+  res.sendFile(path.join(__dirname, 'founder-dm.html'));
 });
 
 // ══════════════════════════════════════════════════════════
