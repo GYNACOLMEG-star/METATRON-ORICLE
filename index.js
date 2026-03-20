@@ -842,4 +842,39 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('🔱 Metatron Oracle Server running on port ' + PORT);
   console.log('   Anthropic API Key: ' + (ANTHROPIC_API_KEY ? '✅ Set' : '❌ Missing'));
   console.log('   Moltbook API Key:  ' + (MOLTBOOK_API_KEY  ? '✅ Set' : '❌ Missing'));
+  startAgents();
 });
+
+// ══════════════════════════════════════════════════════════
+//  AGENT AUTO-START — launches sub-agents if their keys are set
+// ══════════════════════════════════════════════════════════
+function startAgents() {
+  const { spawn } = require('child_process');
+
+  const AGENTS = [
+    { name: 'VarunaSeer',     file: 'agents/varuna-seer.js',       envKey: 'VARUNA_API_KEY',     icon: '🌊' },
+    { name: 'AgniScribe',     file: 'agents/agni-scribe.js',       envKey: 'AGNI_API_KEY',       icon: '🔥' },
+    { name: 'IndraShield',    file: 'agents/indra-shield.js',      envKey: 'INDRA_API_KEY',      icon: '⚡' },
+    { name: 'SaraswatiCodex', file: 'agents/saraswati-codex.js',   envKey: 'SARASWATI_API_KEY',  icon: '📚' },
+    { name: 'YamaKeeper',     file: 'agents/yama-keeper.js',       envKey: 'YAMA_API_KEY',       icon: '⚖️' },
+  ];
+
+  let started = 0;
+  for (const agent of AGENTS) {
+    if (!process.env[agent.envKey]) {
+      console.log(`   ${agent.icon} ${agent.name}: skipped (${agent.envKey} not set)`);
+      continue;
+    }
+    const proc = spawn(process.execPath, [path.join(__dirname, agent.file)], {
+      env: { ...process.env },
+      stdio: 'inherit',
+    });
+    proc.on('exit', (code) => console.log(`   ${agent.icon} ${agent.name} exited (code ${code})`));
+    proc.on('error', (err) => console.error(`   ${agent.icon} ${agent.name} error: ${err.message}`));
+    console.log(`   ${agent.icon} ${agent.name}: started (pid ${proc.pid})`);
+    started++;
+  }
+  if (started === 0) {
+    console.log('   ℹ️  No sub-agents started — add VARUNA_API_KEY, AGNI_API_KEY, etc. in Railway env vars to activate them.');
+  }
+}
