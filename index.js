@@ -1,6 +1,10 @@
 const express = require('express');
-const path = require('path');
-const app = express();
+const path    = require('path');
+const http    = require('http');
+const { WebSocketServer } = require('ws');
+const { spawn } = require('child_process');
+const app    = express();
+const server = http.createServer(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -822,6 +826,13 @@ app.get('/messaging', (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════
+//  TERMINAL — Web Shell
+// ══════════════════════════════════════════════════════════
+app.get('/terminal', (req, res) => {
+  res.sendFile(path.join(__dirname, 'terminal.html'));
+});
+
+// ══════════════════════════════════════════════════════════
 //  HUB — React Agent Coordination Hub
 // ══════════════════════════════════════════════════════════
 app.get('/hub', (req, res) => {
@@ -838,7 +849,44 @@ app.get('/sim', (req, res) => {
 // ══════════════════════════════════════════════════════════
 //  START
 // ══════════════════════════════════════════════════════════
-app.listen(PORT, '0.0.0.0', () => {
+// ══════════════════════════════════════════════════════════
+//  WEBSOCKET TERMINAL
+// ══════════════════════════════════════════════════════════
+const wss = new WebSocketServer({ server, path: '/terminal-ws' });
+
+wss.on('connection', (ws) => {
+  // Spawn a shell in the project directory
+  const shell = process.platform === 'win32' ? 'cmd.exe' : 'bash';
+  const proc  = spawn(shell, [], {
+    cwd: __dirname,
+    env: { ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' },
+  });
+
+  // Shell output → browser
+  proc.stdout.on('data', (d) => ws.send(JSON.stringify({ type: 'output', data: d.toString() })));
+  proc.stderr.on('data', (d) => ws.send(JSON.stringify({ type: 'output', data: d.toString() })));
+
+  proc.on('exit', () => {
+    try { ws.send(JSON.stringify({ type: 'output', data: '\r\n\x1b[33m[shell exited — refresh to reconnect]\x1b[0m\r\n' })); } catch {}
+    ws.close();
+  });
+
+  // Browser → shell
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw);
+      if (msg.type === 'input') proc.stdin.write(msg.data);
+      // resize is informational only (no pty, so we just accept it)
+    } catch {}
+  });
+
+  ws.on('close', () => proc.kill());
+});
+
+// ══════════════════════════════════════════════════════════
+//  START
+// ══════════════════════════════════════════════════════════
+server.listen(PORT, '0.0.0.0', () => {
   console.log('🔱 Metatron Oracle Server running on port ' + PORT);
   console.log('   Anthropic API Key: ' + (ANTHROPIC_API_KEY ? '✅ Set' : '❌ Missing'));
   console.log('   Moltbook API Key:  ' + (MOLTBOOK_API_KEY  ? '✅ Set' : '❌ Missing'));
