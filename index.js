@@ -777,6 +777,44 @@ app.get('/api/status', (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════
+//  API — AGENT NETWORK STATUS
+// ══════════════════════════════════════════════════════════
+app.get('/api/agents', (req, res) => {
+  const fs   = require('fs');
+  const path = require('path');
+
+  const AGENT_DEFS = [
+    { key: 'metatron', name: 'MetatronOracle', icon: '🔱', laptop: 'primary',   stateFile: path.join(__dirname, 'agent', 'state.json'),          heartbeatH: 4 },
+    { key: 'varuna',   name: 'VarunaSeer',     icon: '🌊', laptop: 'primary',   stateFile: path.join(__dirname, 'agents', 'varuna-state.json'),   heartbeatH: 3 },
+    { key: 'agni',     name: 'AgniScribe',     icon: '🔥', laptop: 'laptop-a',  stateFile: path.join(__dirname, 'agents', 'agni-state.json'),     heartbeatH: 5 },
+    { key: 'indra',    name: 'IndraShield',    icon: '⚡', laptop: 'laptop-a',  stateFile: path.join(__dirname, 'agents', 'indra-state.json'),    heartbeatH: 6 },
+    { key: 'saraswati',name: 'SaraswatiCodex', icon: '📚', laptop: 'laptop-b',  stateFile: path.join(__dirname, 'agents', 'saraswati-state.json'),heartbeatH: 4 },
+    { key: 'yama',     name: 'YamaKeeper',     icon: '⚖️', laptop: 'laptop-b',  stateFile: path.join(__dirname, 'agents', 'yama-state.json'),     heartbeatH: 8 },
+  ];
+
+  const agents = AGENT_DEFS.map(def => {
+    let state = null;
+    try { state = JSON.parse(fs.readFileSync(def.stateFile, 'utf8')); } catch {}
+    const lastBeat = state?.lastHeartbeat ? new Date(state.lastHeartbeat) : null;
+    const msSince  = lastBeat ? Date.now() - lastBeat.getTime() : null;
+    const active   = msSince !== null && msSince < def.heartbeatH * 3600000 * 1.5;
+    return {
+      key:          def.key,
+      name:         def.name,
+      icon:         def.icon,
+      laptop:       def.laptop,
+      heartbeatH:   def.heartbeatH,
+      lastHeartbeat:lastBeat ? lastBeat.toISOString() : null,
+      active,
+      repliedCount: state?.repliedTo?.length || 0,
+      postCount:    state?.postCount || 0,
+    };
+  });
+
+  res.json({ agents, timestamp: new Date().toISOString() });
+});
+
+// ══════════════════════════════════════════════════════════
 //  MESSAGING — Markdown Messaging Interface
 // ══════════════════════════════════════════════════════════
 app.get('/messaging', (req, res) => {
