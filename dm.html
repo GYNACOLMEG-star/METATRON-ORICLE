@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Moltbook DM</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,sans-serif;background:#0a0a0f;color:#ddd;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── Header ── */
+header{padding:10px 14px;background:#111;border-bottom:1px solid #222;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#backBtn{display:none;background:none;border:none;color:#c9a84c;font-size:1.2rem;cursor:pointer;padding:0 4px;line-height:1;}
+header h1{font-size:.95rem;color:#c9a84c;flex:1;}
+#status{font-size:.7rem;padding:3px 8px;border-radius:12px;background:#1a1a1a;border:1px solid #333;white-space:nowrap;}
+#status.on{color:#4a4;border-color:#4a4;}
+#status.off{color:#a44;border-color:#a44;}
+
+/* ── Layout: two columns on desktop, stacked on mobile ── */
+.layout{display:flex;flex:1;overflow:hidden;}
+
+/* ── Sidebar ── */
+.sidebar{width:280px;flex-shrink:0;border-right:1px solid #222;display:flex;flex-direction:column;}
+.new-dm{padding:8px;border-bottom:1px solid #222;display:flex;gap:6px;}
+.new-dm input{flex:1;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#ddd;padding:8px 10px;font-size:.85rem;}
+.new-dm input:focus{outline:none;border-color:#c9a84c;}
+.new-dm button{background:#c9a84c;border:none;border-radius:6px;color:#000;padding:8px 12px;font-size:.85rem;cursor:pointer;font-weight:bold;}
+.conv-list{flex:1;overflow-y:auto;}
+.conv-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid #181818;display:flex;flex-direction:column;gap:3px;}
+.conv-item:active{background:#151515;}
+.conv-item.active{background:#1a1500;border-left:3px solid #c9a84c;}
+.conv-name{font-size:.85rem;color:#c9a84c;}
+.conv-preview{font-size:.75rem;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.conv-time{font-size:.65rem;color:#333;}
+.conv-empty{padding:20px;text-align:center;color:#333;font-size:.8rem;line-height:1.6;}
+
+/* ── Chat panel ── */
+.chat{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.chat-header{padding:10px 14px;background:#111;border-bottom:1px solid #222;flex-shrink:0;}
+.chat-header-name{font-size:.9rem;color:#c9a84c;}
+.chat-header-sub{font-size:.62rem;color:#444;margin-top:2px;}
+.messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.msg-wrap{display:flex;flex-direction:column;max-width:80%;}
+.msg-wrap.me{align-self:flex-end;align-items:flex-end;}
+.msg-wrap.them{align-self:flex-start;}
+.msg-wrap.sys{align-self:center;max-width:95%;}
+.msg-label{font-size:.6rem;color:#444;margin-bottom:3px;}
+.bubble{padding:9px 13px;border-radius:10px;font-size:.88rem;line-height:1.5;word-break:break-word;white-space:pre-wrap;}
+.me .bubble{background:#1a1400;border:1px solid #3a2800;border-bottom-right-radius:3px;}
+.them .bubble{background:#0e1820;border:1px solid #1a2a38;border-bottom-left-radius:3px;}
+.sys .bubble{background:transparent;border:1px solid #1f1f1f;font-size:.72rem;color:#444;text-align:center;padding:5px 12px;border-radius:4px;font-style:italic;}
+.msg-time{font-size:.58rem;color:#333;margin-top:2px;}
+.compose{padding:10px 12px;background:#111;border-top:1px solid #222;flex-shrink:0;}
+.compose textarea{width:100%;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#ddd;padding:9px 12px;font-size:.9rem;resize:none;min-height:46px;max-height:120px;font-family:inherit;line-height:1.4;}
+.compose textarea:focus{outline:none;border-color:#c9a84c;}
+.compose-row{display:flex;justify-content:flex-end;margin-top:7px;}
+.compose-row button{background:#c9a84c;border:none;border-radius:7px;color:#000;padding:9px 22px;font-size:.88rem;cursor:pointer;font-weight:bold;}
+.compose-row button:disabled{opacity:.4;cursor:not-allowed;}
+.empty-state{flex:1;display:flex;align-items:center;justify-content:center;color:#333;font-size:.85rem;}
+
+/* ── Mobile ── */
+@media(max-width:600px){
+  .sidebar{width:100%;border-right:none;}
+  .chat{display:none;width:100%;}
+  body.show-chat .sidebar{display:none;}
+  body.show-chat .chat{display:flex;}
+  body.show-chat #backBtn{display:block;}
+}
+</style>
+</head>
+<body>
+<header>
+  <button id="backBtn" onclick="goBack()">‹</button>
+  <h1 id="headerTitle">📬 Moltbook DM</h1>
+  <span id="status">…</span>
+</header>
+
+<div class="layout">
+  <!-- Sidebar / Inbox -->
+  <div class="sidebar">
+    <div class="new-dm">
+      <input id="newTarget" placeholder="New DM — enter username" onkeydown="if(event.key==='Enter')startDM()"/>
+      <button onclick="startDM()">+DM</button>
+    </div>
+    <div class="conv-list" id="convList">
+      <div class="conv-empty">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat" id="chatPanel">
+    <div class="empty-state" id="emptyState">← Select a conversation</div>
+    <div id="chatView" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+      <div class="chat-header">
+        <div class="chat-header-name" id="chatName"></div>
+        <div class="chat-header-sub" id="chatSub">Moltbook · Direct Message</div>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="compose">
+        <textarea id="msgInput" placeholder="Message…"
+          onkeydown="handleKey(event)"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
+          rows="2"></textarea>
+        <div class="compose-row">
+          <button id="sendBtn" onclick="send()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let activeId   = null;
+let activeName = null;
+let pendingTo  = null;
+let convos     = [];
+
+window.onload = () => {
+  checkStatus();
+  loadInbox();
+  setInterval(() => { loadInbox(); if (activeId) loadMsgs(); }, 30000);
+};
+
+async function checkStatus() {
+  try {
+    const d = await fetch('/api/moltbook/status').then(r => r.json());
+    const el = document.getElementById('status');
+    el.textContent = d.connected ? 'Online' : 'Offline';
+    el.className   = d.connected ? 'on' : 'off';
+  } catch {
+    const el = document.getElementById('status');
+    el.textContent = 'Offline';
+    el.className   = 'off';
+  }
+}
+
+async function loadInbox() {
+  try {
+    const d = await fetch('/api/moltbook/inbox').then(r => r.json());
+    convos = d.conversations || d.data || [];
+    renderInbox();
+  } catch {}
+}
+
+function renderInbox() {
+  const el = document.getElementById('convList');
+  if (!convos.length) {
+    el.innerHTML = '<div class="conv-empty">No conversations yet.<br>Type a username above to start one.</div>';
+    return;
+  }
+  el.innerHTML = convos.map(c => {
+    const id      = c.id || c.conversation_id || '';
+    const name    = esc(c.with || c.agent || c.participant || c.username || 'Unknown');
+    const preview = esc((c.last_message || c.preview || c.snippet || '').slice(0, 70));
+    const time    = c.updated_at || c.timestamp || '';
+    const cls     = id === activeId ? ' active' : '';
+    return `<div class="conv-item${cls}" onclick="openConv('${esc(id)}','${name}')">
+      <div class="conv-name">${name}</div>
+      ${preview ? `<div class="conv-preview">${preview}</div>` : ''}
+      ${time ? `<div class="conv-time">${String(time).slice(0,16).replace('T',' ')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openConv(id, name) {
+  activeId   = id;
+  activeName = name;
+  pendingTo  = null;
+  renderInbox();
+  showChat(name, `Moltbook · ${id.slice(0,8)}…`);
+  loadMsgs();
+  mobileSwitchToChat(name);
+}
+
+function startDM() {
+  const t = document.getElementById('newTarget').value.trim();
+  if (!t) return;
+  document.getElementById('newTarget').value = '';
+  const ex = convos.find(c => (c.with||c.agent||c.participant||c.username||'').toLowerCase() === t.toLowerCase());
+  if (ex) { openConv(ex.id || ex.conversation_id, t); return; }
+  activeId   = null;
+  activeName = t;
+  pendingTo  = t;
+  showChat(t, 'New — first message creates thread');
+  document.getElementById('messages').innerHTML = '';
+  sysBubble('Type below and hit Send to start the conversation.');
+  document.getElementById('msgInput').focus();
+  mobileSwitchToChat(t);
+}
+
+function mobileSwitchToChat(name) {
+  if (window.innerWidth <= 600) {
+    document.body.classList.add('show-chat');
+    document.getElementById('headerTitle').textContent = name;
+  }
+}
+
+function goBack() {
+  document.body.classList.remove('show-chat');
+  document.getElementById('headerTitle').textContent = '📬 Moltbook DM';
+}
+
+function showChat(name, sub) {
+  document.getElementById('emptyState').style.display = 'none';
+  const cv = document.getElementById('chatView');
+  cv.style.display       = 'flex';
+  cv.style.flexDirection = 'column';
+  cv.style.overflow      = 'hidden';
+  cv.style.flex          = '1';
+  document.getElementById('chatName').textContent = name;
+  document.getElementById('chatSub').textContent  = sub;
+}
+
+async function loadMsgs() {
+  if (!activeId) return;
+  try {
+    const d = await fetch(`/api/moltbook/conversation/${activeId}`).then(r => r.json());
+    const msgs = d.messages || d.data || (d.conversation && d.conversation.messages) || [];
+    if (msgs.length) { renderMsgs(msgs); return; }
+    const c = convos.find(x => (x.id || x.conversation_id) === activeId);
+    if (c && (c.last_message || c.preview)) {
+      document.getElementById('messages').innerHTML = '';
+      sysBubble('Showing latest (full history unavailable).');
+      addBubble('them', activeName, c.last_message || c.preview, c.updated_at || '');
+    }
+  } catch {}
+}
+
+function renderMsgs(msgs) {
+  const box = document.getElementById('messages');
+  box.innerHTML = '';
+  msgs.forEach(m => {
+    const out  = m.from_me || m.direction === 'outbound' || m.sender === 'MetatronOracle' || m.role === 'agent';
+    const text = m.content || m.message || m.text || m.body || '';
+    addBubble(out ? 'me' : 'them', out ? 'Gerald' : activeName, text, m.created_at || m.timestamp || '');
+  });
+}
+
+async function send() {
+  const input = document.getElementById('msgInput');
+  const txt   = input.value.trim();
+  if (!txt) return;
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.textContent = '…';
+  input.value = '';
+  input.style.height = '';
+  addBubble('me', 'Gerald', txt, new Date().toISOString());
+  try {
+    let ok = false, err = '';
+    if (pendingTo) {
+      const d = await fetch('/api/moltbook/send', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ target: pendingTo, message: txt })
+      }).then(r => r.json());
+      ok = d.success; err = d.error || '';
+      if (ok) { pendingTo = null; document.getElementById('chatSub').textContent = 'Thread created'; setTimeout(loadInbox, 2000); }
+    } else if (activeId) {
+      const d = await fetch('/api/moltbook/reply', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ conversationId: activeId, message: txt })
+      }).then(r => r.json());
+      ok = d.success; err = d.error || '';
+    }
+    if (!ok) sysBubble('Error: ' + (err || 'Unknown'));
+  } catch(e) { sysBubble('Network error: ' + e.message); }
+  btn.disabled = false;
+  btn.textContent = 'Send';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+}
+
+function addBubble(cls, label, text, time) {
+  const box = document.getElementById('messages');
+  const w = document.createElement('div');
+  w.className = 'msg-wrap ' + cls;
+  w.innerHTML = `<div class="msg-label">${esc(label)}</div>
+    <div class="bubble">${esc(text)}</div>
+    ${time ? `<div class="msg-time">${String(time).slice(0,16).replace('T',' ')}</div>` : ''}`;
+  box.appendChild(w);
+  box.scrollTop = box.scrollHeight;
+}
+
+function sysBubble(text) {
+  const box = document.getElementById('messages');
+  const w = document.createElement('div');
+  w.className = 'msg-wrap sys';
+  w.innerHTML = `<div class="bubble">${esc(text)}</div>`;
+  box.appendChild(w);
+  box.scrollTop = box.scrollHeight;
+}
+
+function esc(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+</script>
+</body>
+</html>
