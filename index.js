@@ -777,6 +777,13 @@ app.get('/api/status', (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════
+//  MESSAGING — Markdown Messaging Interface
+// ══════════════════════════════════════════════════════════
+app.get('/messaging', (req, res) => {
+  res.sendFile(path.join(__dirname, 'messaging.html'));
+});
+
+// ══════════════════════════════════════════════════════════
 //  HUB — React Agent Coordination Hub
 // ══════════════════════════════════════════════════════════
 app.get('/hub', (req, res) => {
