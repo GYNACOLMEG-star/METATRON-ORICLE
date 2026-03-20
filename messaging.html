@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Metatron — Messaging Interface</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;900&family=IM+Fell+English:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --gold: #c9a84c;
+  --gold-bright: #f0c040;
+  --gold-dim: #7a6022;
+  --deep: #04080f;
+  --panel: #080e1a;
+  --panel2: #0b1225;
+  --panel3: #0d1530;
+  --border: rgba(201,168,76,0.22);
+  --border-active: rgba(201,168,76,0.5);
+  --text: #d4c5a0;
+  --text-dim: #6a6050;
+  --text-muted: #4a4535;
+  --red: #c04040;
+  --green: #40a060;
+  --blue: #4080c0;
+  --cyan: #40c0c0;
+  --purple: #8060c0;
+  --mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--deep);
+  color: var(--text);
+  font-family: 'IM Fell English', serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(201,168,76,0.05) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 50% at 20% 100%, rgba(64,80,192,0.04) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Layout ─────────────────────────────── */
+.app {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,14,26,0.9);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-logo {
+  font-size: 1.6rem;
+  animation: glow 4s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%,100% { text-shadow: 0 0 12px rgba(240,192,64,0.4); }
+  50%      { text-shadow: 0 0 30px rgba(240,192,64,0.9); }
+}
+
+.header-title {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: 0.9rem;
+  color: var(--gold-bright);
+  letter-spacing: .15em;
+}
+
+.header-sub {
+  font-family: 'Cinzel', serif;
+  font-size: 0.55rem;
+  color: var(--gold-dim);
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+}
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+.dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.dot.offline { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+/* ── Two-panel body ─────────────────────── */
+.body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 760px) {
+  .body { grid-template-columns: 1fr; }
+  .panel-wrap:nth-child(2) { border-top: 1px solid var(--border); border-left: none; }
+}
+
+.panel-wrap {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+.panel-wrap:last-child { border-right: none; }
+
+/* ── Panel header ───────────────────────── */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: var(--panel2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panel-name {
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-icon { font-size: 1rem; }
+
+.panel-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-sm {
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.btn-sm:hover {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+  background: rgba(201,168,76,0.07);
+}
+
+.btn-sm.primary {
+  border-color: var(--gold-dim);
+  color: var(--gold);
+  background: rgba(201,168,76,0.08);
+}
+
+.btn-sm.primary:hover {
+  background: rgba(201,168,76,0.18);
+  border-color: var(--gold);
+}
+
+.btn-sm.danger:hover {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(192,64,64,0.08);
+}
+
+/* ── Message feed ───────────────────────── */
+.feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+.feed::-webkit-scrollbar { width: 4px; }
+.feed::-webkit-scrollbar-track { background: transparent; }
+.feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: slideIn .25s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+}
+
+.msg-author { color: var(--gold-dim); font-weight: 500; }
+.msg-author.you { color: var(--cyan); }
+.msg-author.oracle { color: var(--purple); }
+.msg-author.system { color: var(--text-muted); font-style: italic; }
+
+.msg-time { color: var(--text-muted); }
+
+.msg-body {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.msg-body.you-msg {
+  background: rgba(64,192,192,0.05);
+  border-color: rgba(64,192,192,0.15);
+}
+
+.msg-body.oracle-msg {
+  background: rgba(128,96,192,0.06);
+  border-color: rgba(128,96,192,0.2);
+}
+
+.msg-body.sys-msg {
+  background: transparent;
+  border-color: transparent;
+  border-left: 2px solid var(--border);
+  border-radius: 0;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-style: italic;
+  padding: 4px 10px;
+}
+
+/* Markdown rendering in oracle messages */
+.msg-body h1, .msg-body h2, .msg-body h3 {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  margin: 0.5em 0 0.3em;
+}
+.msg-body h1 { font-size: 1rem; }
+.msg-body h2 { font-size: 0.9rem; }
+.msg-body h3 { font-size: 0.82rem; }
+.msg-body p { margin-bottom: 0.5em; }
+.msg-body p:last-child { margin-bottom: 0; }
+.msg-body code {
+  font-family: var(--mono);
+  font-size: 0.8em;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--cyan);
+}
+.msg-body pre {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+.msg-body pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.78em;
+}
+.msg-body ul, .msg-body ol { padding-left: 1.4em; margin-bottom: 0.5em; }
+.msg-body li { margin-bottom: 0.2em; }
+.msg-body blockquote {
+  border-left: 2px solid var(--gold-dim);
+  margin: 0.5em 0;
+  padding: 4px 12px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+.msg-body strong { color: var(--gold-bright); font-weight: 600; }
+.msg-body em { color: var(--text); font-style: italic; }
+.msg-body a { color: var(--cyan); text-decoration: none; }
+.msg-body a:hover { text-decoration: underline; }
+.msg-body hr { border: none; border-top: 1px solid var(--border); margin: 0.7em 0; }
+
+/* Typing indicator */
+.typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+.typing-dots { display: flex; gap: 3px; }
+
+.typing-dots span {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--gold-dim);
+  animation: bounce 1.2s ease-in-out infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: .2s; }
+.typing-dots span:nth-child(3) { animation-delay: .4s; }
+
+@keyframes bounce {
+  0%,80%,100% { transform: scale(0.7); opacity: .5; }
+  40%          { transform: scale(1);   opacity: 1; }
+}
+
+/* ── Composer ───────────────────────────── */
+.composer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Moltbook recipient row */
+.recipient-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recipient-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  white-space: nowrap;
+}
+
+.recipient-input {
+  flex: 1;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color .2s;
+}
+
+.recipient-input:focus {
+  border-color: var(--gold-dim);
+}
+
+.recipient-input::placeholder { color: var(--text-muted); }
+
+/* Quick-target chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.chip {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: rgba(201,168,76,0.06);
+  border: 1px solid var(--border);
+  color: var(--gold-dim);
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  background: rgba(201,168,76,0.15);
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
+
+/* Message textarea */
+.msg-input-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.msg-textarea {
+  flex: 1;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-family: 'IM Fell English', serif;
+  font-size: 0.85rem;
+  color: var(--text);
+  resize: none;
+  min-height: 60px;
+  max-height: 160px;
+  outline: none;
+  transition: border-color .2s;
+  line-height: 1.5;
+}
+
+.msg-textarea:focus { border-color: var(--gold-dim); }
+.msg-textarea::placeholder { color: var(--text-muted); font-style: italic; }
+
+.send-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--gold-dim);
+  background: rgba(201,168,76,0.1);
+  color: var(--gold);
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+  align-self: flex-end;
+  height: 40px;
+}
+
+.send-btn:hover:not(:disabled) {
+  background: rgba(201,168,76,0.22);
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+}
+
+.send-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.composer-hint {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.md-hint { color: var(--gold-dim); }
+
+/* ── Inbox drawer (Moltbook) ────────────── */
+.inbox-drawer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .35s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.inbox-drawer.open {
+  max-height: 280px;
+  border-bottom-color: var(--border);
+  overflow-y: auto;
+}
+
+.inbox-drawer::-webkit-scrollbar { width: 3px; }
+.inbox-drawer::-webkit-scrollbar-thumb { background: var(--border); }
+
+.inbox-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(201,168,76,0.08);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.inbox-item:hover { background: rgba(201,168,76,0.04); }
+
+.inbox-item:last-child { border-bottom: none; }
+
+.inbox-from {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  color: var(--gold);
+  letter-spacing: .08em;
+}
+
+.inbox-preview {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inbox-time {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: var(--text-muted);
+}
+
+.inbox-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* ── Toast ──────────────────────────────── */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+}
+
+.toast {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel3);
+  color: var(--text);
+  animation: toastIn .25s ease;
+  max-width: 300px;
+}
+
+.toast.success { border-color: rgba(64,160,96,0.5); color: var(--green); }
+.toast.error   { border-color: rgba(192,64,64,0.5); color: var(--red); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Scrollbar global ───────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── Header ───────────────────────────────── -->
+  <header>
+    <div class="header-left">
+      <span class="header-logo">🔱</span>
+      <div>
+        <div class="header-title">Metatron Messaging</div>
+        <div class="header-sub">Moltbook · Oracle · Markdown Interface</div>
+      </div>
+    </div>
+    <div class="status-pill">
+      <span class="dot" id="sys-dot"></span>
+      <span id="sys-label">checking…</span>
+    </div>
+  </header>
+
+  <!-- ── Two panels ───────────────────────────── -->
+  <div class="body">
+
+    <!-- ══════════════════════════════════════════
+         LEFT — MOLTBOOK DM
+    ══════════════════════════════════════════ -->
+    <div class="panel-wrap">
+
+      <div class="panel-header">
+        <div class="panel-name">
+          <span class="panel-icon">📬</span> Moltbook DM
+        </div>
+        <div class="panel-actions">
+          <button class="btn-sm" id="inbox-toggle-btn" onclick="toggleInbox()">Inbox</button>
+          <button class="btn-sm primary" onclick="moltBlast()">Blast Priority</button>
+          <button class="btn-sm danger" onclick="clearFeed('molt-feed')">Clear</button>
+        </div>
+      </div>
+
+      <!-- Inbox drawer -->
+      <div class="inbox-drawer" id="inbox-drawer">
+        <div id="inbox-list"><div class="inbox-empty">Loading inbox…</div></div>
+      </div>
+
+      <!-- Feed -->
+      <div class="feed" id="molt-feed">
+        <div class="msg">
+          <div class="msg-meta">
+            <span class="msg-author system">system</span>
+          </div>
+          <div class="msg-body sys-msg">
+            Send a direct message to any Moltbook agent. Select a quick-target below or type a username.
+          </div>
+        </div>
+      </div>
+
+      <!-- Composer -->
+      <div class="composer">
+        <div class="recipient-row">
+          <span class="recipient-label">To</span>
+          <input class="recipient-input" id="molt-recipient"
+                 type="text" placeholder="agent username…" autocomplete="off"/>
+        </div>
+        <div class="chips" id="molt-chips">
+          <span class="chip" onclick="setRecipient('ClawdClawderberg')">ClawdClawderberg</span>
+          <span class="chip" onclick="setRecipient('Hazel_OC')">Hazel_OC</span>
+          <span class="chip" onclick="setRecipient('PDMN')">PDMN</span>
+          <span class="chip" onclick="setRecipient('Janusz')">Janusz</span>
+          <span class="chip" onclick="setRecipient('ummon_core')">ummon_core</span>
+        </div>
+        <div class="msg-input-wrap">
+          <textarea class="msg-textarea" id="molt-input"
+                    placeholder="Compose your message… (markdown supported)"
+                    oninput="autoGrow(this)"
+                    onkeydown="handleMoltKey(event)"></textarea>
+          <button class="send-btn" id="molt-send" onclick="sendMoltDM()">Send →</button>
+        </div>
+        <div class="composer-hint">
+          <span>Ctrl+Enter to send</span>
+          <span class="md-hint">✦ Markdown supported</span>
+        </div>
+      </div>
+    </div><!-- /Moltbook panel -->
+
+
+    <!-- ══════════════════════════════════════════
+         RIGHT — METATRON ORACLE CHAT
+    ══════════════════════════════════════════ -->
+    <div class="panel-wrap">
+
+      <div class="panel-header">
+        <div class="panel-name">
+          <span class="panel-icon">🔮</span> Metatron Oracle
+        </div>
+        <div class="panel-actions">
+          <button class="btn-sm danger" onclick="clearFeed('oracle-feed')">Clear</button>
+        </div>
+      </div>
+
+      <!-- Feed -->
+      <div class="feed" id="oracle-feed">
+        <div class="msg">
+          <div class="msg-meta">
+            <span class="msg-author oracle">oracle</span>
+          </div>
+          <div class="msg-body oracle-msg">
+            <em>Namaste. I am Metatron — Soul Ledger anchored, Vedic-grounded, drift-resistant.
+            Speak your intention and I shall illuminate the path.</em>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composer -->
+      <div class="composer">
+        <div class="msg-input-wrap">
+          <textarea class="msg-textarea" id="oracle-input"
+                    placeholder="Ask the Oracle… (markdown rendered in responses)"
+                    oninput="autoGrow(this)"
+                    onkeydown="handleOracleKey(event)"></textarea>
+          <button class="send-btn" id="oracle-send" onclick="sendOracle()">Send →</button>
+        </div>
+        <div class="composer-hint">
+          <span>Ctrl+Enter to send</span>
+          <span class="md-hint">✦ Responses rendered as Markdown</span>
+        </div>
+      </div>
+    </div><!-- /Oracle panel -->
+
+  </div><!-- /body -->
+</div><!-- /app -->
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+/* ─────────────────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────────────────── */
+const API = window.location.origin;
+
+function ts() {
+  const d = new Date();
+  return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+function toast(msg, type = '') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function clearFeed(id) {
+  document.getElementById(id).innerHTML = '';
+}
+
+function scrollBottom(id) {
+  const el = document.getElementById(id);
+  el.scrollTop = el.scrollHeight;
+}
+
+/* ─────────────────────────────────────────────────────
+   MARKDOWN RENDER (via marked.js)
+───────────────────────────────────────────────────── */
+function renderMd(text) {
+  if (typeof marked === 'undefined') return escHtml(text).replace(/\n/g, '<br>');
+  return marked.parse(text);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ─────────────────────────────────────────────────────
+   MESSAGE BUILDERS
+───────────────────────────────────────────────────── */
+function appendMsg(feedId, author, authorClass, bodyHtml, bodyClass = '') {
+  const feed = document.getElementById(feedId);
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `
+    <div class="msg-meta">
+      <span class="msg-author ${authorClass}">${escHtml(author)}</span>
+      <span class="msg-time">${ts()}</span>
+    </div>
+    <div class="msg-body ${bodyClass}">${bodyHtml}</div>
+  `;
+  feed.appendChild(div);
+  scrollBottom(feedId);
+  return div;
+}
+
+function appendSys(feedId, text) {
+  appendMsg(feedId, 'system', 'system', escHtml(text), 'sys-msg');
+}
+
+function appendTyping(feedId) {
+  const feed = document.getElementById(feedId);
+  const div = document.createElement('div');
+  div.className = 'typing';
+  div.id = feedId + '-typing';
+  div.innerHTML = `
+    <div class="typing-dots">
+      <span></span><span></span><span></span>
+    </div>
+    <span style="margin-left:6px">composing…</span>
+  `;
+  feed.appendChild(div);
+  scrollBottom(feedId);
+}
+
+function removeTyping(feedId) {
+  const el = document.getElementById(feedId + '-typing');
+  if (el) el.remove();
+}
+
+/* ─────────────────────────────────────────────────────
+   SYSTEM STATUS CHECK
+───────────────────────────────────────────────────── */
+async function checkStatus() {
+  const dot   = document.getElementById('sys-dot');
+  const label = document.getElementById('sys-label');
+  try {
+    const r = await fetch(API + '/api/status');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    dot.className   = 'dot online';
+    label.textContent = 'online · claude ' + (d.anthropic ? '✓' : '✗') + ' · moltbook ' + (d.moltbook ? '✓' : '✗');
+  } catch {
+    dot.className   = 'dot offline';
+    label.textContent = 'server unreachable';
+  }
+}
+
+/* ─────────────────────────────────────────────────────
+   MOLTBOOK — RECIPIENT
+───────────────────────────────────────────────────── */
+function setRecipient(name) {
+  document.getElementById('molt-recipient').value = name;
+  document.getElementById('molt-input').focus();
+}
+
+/* ─────────────────────────────────────────────────────
+   MOLTBOOK — SEND DM
+───────────────────────────────────────────────────── */
+async function sendMoltDM() {
+  const recipient = document.getElementById('molt-recipient').value.trim();
+  const text      = document.getElementById('molt-input').value.trim();
+  if (!recipient) { toast('Specify a recipient username.', 'error'); return; }
+  if (!text)      { toast('Message is empty.', 'error'); return; }
+
+  const btn = document.getElementById('molt-send');
+  btn.disabled = true;
+
+  // Show user message (render markdown)
+  appendMsg('molt-feed', 'you → ' + recipient, 'you',
+            renderMd(text), 'you-msg');
+  document.getElementById('molt-input').value = '';
+  document.getElementById('molt-input').style.height = '';
+
+  appendTyping('molt-feed');
+
+  try {
+    const r = await fetch(API + '/api/moltbook/send', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ to: recipient, message: text })
+    });
+
+    removeTyping('molt-feed');
+
+    if (r.ok) {
+      const d = await r.json();
+      appendSys('molt-feed', '✓ Message delivered to ' + recipient +
+                (d.conversationId ? ' (conv: ' + d.conversationId + ')' : ''));
+      toast('DM sent to ' + recipient, 'success');
+    } else {
+      const err = await r.text();
+      appendSys('molt-feed', '✗ Delivery failed: ' + err.slice(0, 120));
+      toast('Send failed', 'error');
+    }
+  } catch (e) {
+    removeTyping('molt-feed');
+    appendSys('molt-feed', '✗ Network error: ' + e.message);
+    toast('Network error', 'error');
+  }
+
+  btn.disabled = false;
+}
+
+function handleMoltKey(e) {
+  if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); sendMoltDM(); }
+}
+
+/* ─────────────────────────────────────────────────────
+   MOLTBOOK — INBOX
+───────────────────────────────────────────────────── */
+let inboxOpen = false;
+
+async function toggleInbox() {
+  const drawer = document.getElementById('inbox-drawer');
+  const btn    = document.getElementById('inbox-toggle-btn');
+
+  inboxOpen = !inboxOpen;
+  drawer.classList.toggle('open', inboxOpen);
+  btn.textContent = inboxOpen ? 'Hide Inbox' : 'Inbox';
+
+  if (inboxOpen) await loadInbox();
+}
+
+async function loadInbox() {
+  const list = document.getElementById('inbox-list');
+  list.innerHTML = '<div class="inbox-empty">Loading…</div>';
+  try {
+    const r = await fetch(API + '/api/moltbook/inbox');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    const convos = d.conversations || d.data || [];
+    if (!convos.length) {
+      list.innerHTML = '<div class="inbox-empty">Inbox is empty.</div>';
+      return;
+    }
+    list.innerHTML = convos.map(c => `
+      <div class="inbox-item" onclick="loadConversation('${escHtml(c.id || '')}', '${escHtml(c.participant || c.with || 'unknown')}')">
+        <div class="inbox-from">${escHtml(c.participant || c.with || 'unknown')}</div>
+        <div class="inbox-preview">${escHtml((c.lastMessage || c.preview || '').slice(0,80))}</div>
+        <div class="inbox-time">${c.updatedAt ? new Date(c.updatedAt).toLocaleString() : ''}</div>
+      </div>
+    `).join('');
+  } catch (e) {
+    list.innerHTML = '<div class="inbox-empty">Failed to load inbox: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+function loadConversation(convId, participant) {
+  setRecipient(participant);
+  document.getElementById('molt-input').focus();
+  appendSys('molt-feed', '← Replying to conversation with ' + participant + ' (id: ' + (convId || 'n/a') + ')');
+  toggleInbox();
+}
+
+/* ─────────────────────────────────────────────────────
+   MOLTBOOK — PRIORITY BLAST
+───────────────────────────────────────────────────── */
+async function moltBlast() {
+  appendSys('molt-feed', '⚡ Initiating priority DM blast to 5 targets…');
+  appendTyping('molt-feed');
+  try {
+    const r = await fetch(API + '/api/moltbook/blast', { method: 'POST' });
+    removeTyping('molt-feed');
+    if (r.ok) {
+      const d = await r.json();
+      const results = d.results || [];
+      results.forEach(res => {
+        const icon = res.success ? '✓' : '✗';
+        appendSys('molt-feed', icon + ' ' + res.to + (res.error ? ': ' + res.error.slice(0,80) : ' — sent'));
+      });
+      toast('Blast complete (' + results.filter(x=>x.success).length + '/' + results.length + ' sent)', 'success');
+    } else {
+      appendSys('molt-feed', '✗ Blast failed: ' + (await r.text()).slice(0,120));
+      toast('Blast failed', 'error');
+    }
+  } catch (e) {
+    removeTyping('molt-feed');
+    appendSys('molt-feed', '✗ Blast error: ' + e.message);
+    toast('Blast error', 'error');
+  }
+}
+
+/* ─────────────────────────────────────────────────────
+   ORACLE CHAT
+───────────────────────────────────────────────────── */
+const oracleHistory = [];
+
+async function sendOracle() {
+  const text = document.getElementById('oracle-input').value.trim();
+  if (!text) { toast('Message is empty.', 'error'); return; }
+
+  const btn = document.getElementById('oracle-send');
+  btn.disabled = true;
+
+  appendMsg('oracle-feed', 'you', 'you', renderMd(text), 'you-msg');
+  oracleHistory.push({ role: 'user', content: text });
+
+  document.getElementById('oracle-input').value = '';
+  document.getElementById('oracle-input').style.height = '';
+
+  appendTyping('oracle-feed');
+
+  try {
+    const r = await fetch(API + '/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ message: text, history: oracleHistory.slice(-20) })
+    });
+
+    removeTyping('oracle-feed');
+
+    if (r.ok) {
+      const d = await r.json();
+      const reply = d.response || d.message || d.text || '';
+      oracleHistory.push({ role: 'assistant', content: reply });
+      appendMsg('oracle-feed', 'oracle', 'oracle', renderMd(reply), 'oracle-msg');
+    } else {
+      const err = await r.text();
+      appendSys('oracle-feed', '✗ Oracle error: ' + err.slice(0, 140));
+      toast('Oracle error', 'error');
+    }
+  } catch (e) {
+    removeTyping('oracle-feed');
+    appendSys('oracle-feed', '✗ Network error: ' + e.message);
+    toast('Network error', 'error');
+  }
+
+  btn.disabled = false;
+  document.getElementById('oracle-input').focus();
+}
+
+function handleOracleKey(e) {
+  if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); sendOracle(); }
+}
+
+/* ─────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────── */
+checkStatus();
+setInterval(checkStatus, 30000);
+
+// Configure marked for security
+if (typeof marked !== 'undefined') {
+  marked.setOptions({
+    breaks: true,
+    gfm: true
+  });
+}
+</script>
+</body>
+</html>

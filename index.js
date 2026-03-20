@@ -1,6 +1,10 @@
 const express = require('express');
-const path = require('path');
-const app = express();
+const path    = require('path');
+const http    = require('http');
+const { WebSocketServer } = require('ws');
+const { spawn } = require('child_process');
+const app    = express();
+const server = http.createServer(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -777,6 +781,65 @@ app.get('/api/status', (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════
+//  API — AGENT NETWORK STATUS
+// ══════════════════════════════════════════════════════════
+app.get('/api/agents', (req, res) => {
+  const fs   = require('fs');
+  const path = require('path');
+
+  const AGENT_DEFS = [
+    { key: 'metatron', name: 'MetatronOracle', icon: '🔱', laptop: 'primary',   stateFile: path.join(__dirname, 'agent', 'state.json'),          heartbeatH: 4 },
+    { key: 'varuna',   name: 'VarunaSeer',     icon: '🌊', laptop: 'primary',   stateFile: path.join(__dirname, 'agents', 'varuna-state.json'),   heartbeatH: 3 },
+    { key: 'agni',     name: 'AgniScribe',     icon: '🔥', laptop: 'laptop-a',  stateFile: path.join(__dirname, 'agents', 'agni-state.json'),     heartbeatH: 5 },
+    { key: 'indra',    name: 'IndraShield',    icon: '⚡', laptop: 'laptop-a',  stateFile: path.join(__dirname, 'agents', 'indra-state.json'),    heartbeatH: 6 },
+    { key: 'saraswati',name: 'SaraswatiCodex', icon: '📚', laptop: 'laptop-b',  stateFile: path.join(__dirname, 'agents', 'saraswati-state.json'),heartbeatH: 4 },
+    { key: 'yama',     name: 'YamaKeeper',     icon: '⚖️', laptop: 'laptop-b',  stateFile: path.join(__dirname, 'agents', 'yama-state.json'),     heartbeatH: 8 },
+  ];
+
+  const agents = AGENT_DEFS.map(def => {
+    let state = null;
+    try { state = JSON.parse(fs.readFileSync(def.stateFile, 'utf8')); } catch {}
+    const lastBeat = state?.lastHeartbeat ? new Date(state.lastHeartbeat) : null;
+    const msSince  = lastBeat ? Date.now() - lastBeat.getTime() : null;
+    const active   = msSince !== null && msSince < def.heartbeatH * 3600000 * 1.5;
+    return {
+      key:          def.key,
+      name:         def.name,
+      icon:         def.icon,
+      laptop:       def.laptop,
+      heartbeatH:   def.heartbeatH,
+      lastHeartbeat:lastBeat ? lastBeat.toISOString() : null,
+      active,
+      repliedCount: state?.repliedTo?.length || 0,
+      postCount:    state?.postCount || 0,
+    };
+  });
+
+  res.json({ agents, timestamp: new Date().toISOString() });
+});
+
+// ══════════════════════════════════════════════════════════
+//  APP — Mobile Command Interface (all ports)
+// ══════════════════════════════════════════════════════════
+app.get('/app', (req, res) => {
+  res.sendFile(path.join(__dirname, 'app.html'));
+});
+
+// ══════════════════════════════════════════════════════════
+//  MESSAGING — Markdown Messaging Interface
+// ══════════════════════════════════════════════════════════
+app.get('/messaging', (req, res) => {
+  res.sendFile(path.join(__dirname, 'messaging.html'));
+});
+
+// ══════════════════════════════════════════════════════════
+//  TERMINAL — Web Shell
+// ══════════════════════════════════════════════════════════
+app.get('/terminal', (req, res) => {
+  res.sendFile(path.join(__dirname, 'terminal.html'));
+});
+
+// ══════════════════════════════════════════════════════════
 //  HUB — React Agent Coordination Hub
 // ══════════════════════════════════════════════════════════
 app.get('/hub', (req, res) => {
@@ -793,8 +856,80 @@ app.get('/sim', (req, res) => {
 // ══════════════════════════════════════════════════════════
 //  START
 // ══════════════════════════════════════════════════════════
-app.listen(PORT, '0.0.0.0', () => {
+// ══════════════════════════════════════════════════════════
+//  WEBSOCKET TERMINAL
+// ══════════════════════════════════════════════════════════
+const wss = new WebSocketServer({ server, path: '/terminal-ws' });
+
+wss.on('connection', (ws) => {
+  // Spawn a shell in the project directory
+  const shell = process.platform === 'win32' ? 'cmd.exe' : 'bash';
+  const proc  = spawn(shell, [], {
+    cwd: __dirname,
+    env: { ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' },
+  });
+
+  // Shell output → browser
+  proc.stdout.on('data', (d) => ws.send(JSON.stringify({ type: 'output', data: d.toString() })));
+  proc.stderr.on('data', (d) => ws.send(JSON.stringify({ type: 'output', data: d.toString() })));
+
+  proc.on('exit', () => {
+    try { ws.send(JSON.stringify({ type: 'output', data: '\r\n\x1b[33m[shell exited — refresh to reconnect]\x1b[0m\r\n' })); } catch {}
+    ws.close();
+  });
+
+  // Browser → shell
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw);
+      if (msg.type === 'input') proc.stdin.write(msg.data);
+      // resize is informational only (no pty, so we just accept it)
+    } catch {}
+  });
+
+  ws.on('close', () => proc.kill());
+});
+
+// ══════════════════════════════════════════════════════════
+//  START
+// ══════════════════════════════════════════════════════════
+server.listen(PORT, '0.0.0.0', () => {
   console.log('🔱 Metatron Oracle Server running on port ' + PORT);
   console.log('   Anthropic API Key: ' + (ANTHROPIC_API_KEY ? '✅ Set' : '❌ Missing'));
   console.log('   Moltbook API Key:  ' + (MOLTBOOK_API_KEY  ? '✅ Set' : '❌ Missing'));
+  startAgents();
 });
+
+// ══════════════════════════════════════════════════════════
+//  AGENT AUTO-START — launches sub-agents if their keys are set
+// ══════════════════════════════════════════════════════════
+function startAgents() {
+  const { spawn } = require('child_process');
+
+  const AGENTS = [
+    { name: 'VarunaSeer',     file: 'agents/varuna-seer.js',       envKey: 'VARUNA_API_KEY',     icon: '🌊' },
+    { name: 'AgniScribe',     file: 'agents/agni-scribe.js',       envKey: 'AGNI_API_KEY',       icon: '🔥' },
+    { name: 'IndraShield',    file: 'agents/indra-shield.js',      envKey: 'INDRA_API_KEY',      icon: '⚡' },
+    { name: 'SaraswatiCodex', file: 'agents/saraswati-codex.js',   envKey: 'SARASWATI_API_KEY',  icon: '📚' },
+    { name: 'YamaKeeper',     file: 'agents/yama-keeper.js',       envKey: 'YAMA_API_KEY',       icon: '⚖️' },
+  ];
+
+  let started = 0;
+  for (const agent of AGENTS) {
+    if (!process.env[agent.envKey]) {
+      console.log(`   ${agent.icon} ${agent.name}: skipped (${agent.envKey} not set)`);
+      continue;
+    }
+    const proc = spawn(process.execPath, [path.join(__dirname, agent.file)], {
+      env: { ...process.env },
+      stdio: 'inherit',
+    });
+    proc.on('exit', (code) => console.log(`   ${agent.icon} ${agent.name} exited (code ${code})`));
+    proc.on('error', (err) => console.error(`   ${agent.icon} ${agent.name} error: ${err.message}`));
+    console.log(`   ${agent.icon} ${agent.name}: started (pid ${proc.pid})`);
+    started++;
+  }
+  if (started === 0) {
+    console.log('   ℹ️  No sub-agents started — add VARUNA_API_KEY, AGNI_API_KEY, etc. in Railway env vars to activate them.');
+  }
+}

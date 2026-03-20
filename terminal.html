@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Metatron — Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+<style>
+:root {
+  --gold: #c9a84c;
+  --gold-bright: #f0c040;
+  --gold-dim: #7a6022;
+  --deep: #04080f;
+  --panel: #080e1a;
+  --panel2: #0b1225;
+  --border: rgba(201,168,76,0.22);
+  --text: #d4c5a0;
+  --text-dim: #6a6050;
+  --green: #40a060;
+  --red: #c04040;
+  --mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--deep);
+  color: var(--text);
+  font-family: var(--mono);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(201,168,76,0.04) 0%, transparent 65%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Header ─────────────────────────────── */
+header {
+  position: relative; z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,14,26,0.95);
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo { font-size: 1.4rem; animation: glow 4s ease-in-out infinite; }
+@keyframes glow {
+  0%,100% { text-shadow: 0 0 10px rgba(240,192,64,0.4); }
+  50%      { text-shadow: 0 0 25px rgba(240,192,64,0.9); }
+}
+
+.title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  color: var(--gold-bright);
+  letter-spacing: .15em;
+}
+.subtitle {
+  font-size: 0.58rem;
+  color: var(--gold-dim);
+  letter-spacing: .2em;
+  margin-top: 2px;
+}
+
+.conn-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; }
+.dot.connected    { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.dot.disconnected { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+/* ── Quick commands bar ─────────────────── */
+.quickbar {
+  position: relative; z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.qbar-label {
+  font-size: 0.58rem;
+  color: var(--gold-dim);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.qbtn {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.qbtn:hover {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+  background: rgba(201,168,76,0.08);
+}
+
+/* ── Terminal container ─────────────────── */
+.term-wrap {
+  position: relative; z-index: 1;
+  flex: 1;
+  overflow: hidden;
+  padding: 8px;
+  background: #050a0f;
+}
+
+#terminal {
+  height: 100%;
+  width: 100%;
+}
+
+/* xterm overrides */
+.xterm { height: 100%; }
+.xterm-viewport { background: transparent !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="logo">🔱</span>
+    <div>
+      <div class="title">Metatron Terminal</div>
+      <div class="subtitle">Railway Server Shell</div>
+    </div>
+  </div>
+  <div class="conn-pill">
+    <span class="dot" id="conn-dot"></span>
+    <span id="conn-label">connecting…</span>
+  </div>
+</header>
+
+<!-- Quick command shortcuts -->
+<div class="quickbar">
+  <span class="qbar-label">Quick</span>
+  <button class="qbtn" onclick="send('node agents/varuna-seer.js register\n')">Register VarunaSeer</button>
+  <button class="qbtn" onclick="send('node agents/agni-scribe.js register\n')">Register AgniScribe</button>
+  <button class="qbtn" onclick="send('node agents/indra-shield.js register\n')">Register IndraShield</button>
+  <button class="qbtn" onclick="send('node agents/saraswati-codex.js register\n')">Register SaraswatiCodex</button>
+  <button class="qbtn" onclick="send('node agents/yama-keeper.js register\n')">Register YamaKeeper</button>
+  <button class="qbtn" onclick="send('git pull origin main\n')">git pull</button>
+  <button class="qbtn" onclick="send('npm install\n')">npm install</button>
+  <button class="qbtn" onclick="send('printenv | grep _API_KEY\n')">show env keys</button>
+  <button class="qbtn" onclick="send('node agents/varuna-seer.js test\n')">test VarunaSeer</button>
+  <button class="qbtn" onclick="send('ls agents/\n')">ls agents/</button>
+</div>
+
+<div class="term-wrap">
+  <div id="terminal"></div>
+</div>
+
+<script>
+// ── xterm setup ────────────────────────────────────────────
+const term = new Terminal({
+  theme: {
+    background:  '#050a0f',
+    foreground:  '#d4c5a0',
+    cursor:      '#f0c040',
+    cursorAccent:'#04080f',
+    black:       '#1a1a2e',
+    red:         '#c04040',
+    green:       '#40a060',
+    yellow:      '#c9a84c',
+    blue:        '#4080c0',
+    magenta:     '#8060c0',
+    cyan:        '#40c0c0',
+    white:       '#d4c5a0',
+    brightBlack: '#3a3a5e',
+    brightRed:   '#e06060',
+    brightGreen: '#60c080',
+    brightYellow:'#f0c040',
+    brightBlue:  '#60a0e0',
+    brightMagenta:'#a080e0',
+    brightCyan:  '#60e0e0',
+    brightWhite: '#f0e8d0',
+  },
+  fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+  fontSize: 14,
+  lineHeight: 1.4,
+  cursorBlink: true,
+  cursorStyle: 'block',
+  scrollback: 5000,
+  convertEol: true,
+});
+
+const fitAddon = new FitAddon.FitAddon();
+term.loadAddon(fitAddon);
+term.open(document.getElementById('terminal'));
+fitAddon.fit();
+
+window.addEventListener('resize', () => fitAddon.fit());
+
+// ── WebSocket ───────────────────────────────────────────────
+const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsUrl  = proto + '//' + location.host + '/terminal-ws';
+
+let ws;
+let reconnectTimer;
+
+function setConn(connected) {
+  const dot   = document.getElementById('conn-dot');
+  const label = document.getElementById('conn-label');
+  dot.className   = 'dot ' + (connected ? 'connected' : 'disconnected');
+  label.textContent = connected ? 'connected' : 'disconnected — retrying…';
+}
+
+function connect() {
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    setConn(true);
+    // Send initial terminal size
+    ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+    term.writeln('\r\n\x1b[33m🔱 Metatron Terminal — Railway Server Shell\x1b[0m');
+    term.writeln('\x1b[2m  Type any command. Use the quick buttons above to register agents.\x1b[0m\r\n');
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'output') term.write(msg.data);
+    } catch {
+      term.write(e.data);
+    }
+  };
+
+  ws.onclose = () => {
+    setConn(false);
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connect, 3000);
+  };
+
+  ws.onerror = () => ws.close();
+}
+
+// ── Input from terminal → server ────────────────────────────
+term.onData(data => {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'input', data }));
+  }
+});
+
+// ── Resize → notify server ──────────────────────────────────
+term.onResize(({ cols, rows }) => {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+  }
+  fitAddon.fit();
+});
+
+// ── Quick command helper ─────────────────────────────────────
+function send(cmd) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'input', data: cmd }));
+  }
+  term.focus();
+}
+
+connect();
+</script>
+</body>
+</html>

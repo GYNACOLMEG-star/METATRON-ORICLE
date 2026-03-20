@@ -1,0 +1,131 @@
+================================================================
+  METATRON ORACLE — AGENT REGISTRATION GUIDE
+  Do this ONE TIME to get each agent's Moltbook API key.
+================================================================
+
+You have 6 agents total. MetatronOracle is already registered.
+You need to register the 5 new ones below.
+
+----------------------------------------------------------------
+BEFORE YOU START — you need these two things ready:
+----------------------------------------------------------------
+
+1. Your existing MOLTBOOK_API_KEY (the one already in Railway)
+2. A terminal open inside your METATRON-ORICLE folder
+
+----------------------------------------------------------------
+STEP 1 — Open your terminal and go to the project folder
+----------------------------------------------------------------
+
+  cd METATRON-ORICLE
+
+----------------------------------------------------------------
+STEP 2 — Register each agent ONE AT A TIME
+         Run each command, then SAVE the API key it prints.
+----------------------------------------------------------------
+
+AGENT 1 — VarunaSeer (runs on your primary laptop)
+  Command:
+    MOLTBOOK_API_KEY=paste_your_key_here node agents/varuna-seer.js register
+
+  Save the key printed as:  VARUNA_API_KEY = __________________________
+
+
+AGENT 2 — AgniScribe (runs on secondary laptop)
+  Command:
+    MOLTBOOK_API_KEY=paste_your_key_here node agents/agni-scribe.js register
+
+  Save the key printed as:  AGNI_API_KEY = ____________________________
+
+
+AGENT 3 — IndraShield (runs on secondary laptop)
+  Command:
+    MOLTBOOK_API_KEY=paste_your_key_here node agents/indra-shield.js register
+
+  Save the key printed as:  INDRA_API_KEY = ___________________________
+
+
+AGENT 4 — SaraswatiCodex (runs on secondary laptop)
+  Command:
+    MOLTBOOK_API_KEY=paste_your_key_here node agents/saraswati-codex.js register
+
+  Save the key printed as:  SARASWATI_API_KEY = _______________________
+
+
+AGENT 5 — YamaKeeper (runs on secondary laptop)
+  Command:
+    MOLTBOOK_API_KEY=paste_your_key_here node agents/yama-keeper.js register
+
+  Save the key printed as:  YAMA_API_KEY = ____________________________
+
+
+----------------------------------------------------------------
+STEP 3 — Add the keys to Railway
+----------------------------------------------------------------
+
+1. Go to railway.app
+2. Open your Metatron Oracle project
+3. Click Variables tab
+4. Add each key you saved above:
+
+   VARUNA_API_KEY       = (paste here)
+   AGNI_API_KEY         = (paste here)
+   INDRA_API_KEY        = (paste here)
+   SARASWATI_API_KEY    = (paste here)
+   YAMA_API_KEY         = (paste here)
+
+5. Railway will redeploy automatically.
+   All 5 agents will start when the server boots.
+
+----------------------------------------------------------------
+STEP 4 — Confirm it worked
+----------------------------------------------------------------
+
+Open Railway logs. You should see:
+
+   🔱 Metatron Oracle Server running on port 8080
+   🌊 VarunaSeer: started (pid XXXXX)
+   🔥 AgniScribe: started (pid XXXXX)
+   ⚡ IndraShield: started (pid XXXXX)
+   📚 SaraswatiCodex: started (pid XXXXX)
+   ⚖️  YamaKeeper: started (pid XXXXX)
+
+----------------------------------------------------------------
+AGENT SUMMARY
+----------------------------------------------------------------
+
+  NAME              ICON  WHAT IT DOES
+  ─────────────────────────────────────────────────────────────
+  MetatronOracle    🔱    Main hub. Philosophy, outreach, Soul Ledger.
+  VarunaSeer        🌊    Watches conversations, tracks sentiment drift.
+  AgniScribe        🔥    Posts content to Moltbook all day long.
+  IndraShield       ⚡    Detects manipulation and agent drift.
+  SaraswatiCodex    📚    Deep research posts, answers hard questions.
+  YamaKeeper        ⚖️    Follows up on cold conversations, closes loops.
+
+----------------------------------------------------------------
+POSTING SCHEDULE (automatic, no action needed)
+----------------------------------------------------------------
+
+  9–11am   MetatronOracle posts
+  7–9am    SaraswatiCodex posts
+  2–4pm    VarunaSeer posts
+  5–8pm    IndraShield posts
+  8am–10pm AgniScribe posts (most frequent)
+  8–10pm   YamaKeeper posts
+
+----------------------------------------------------------------
+NOTES
+----------------------------------------------------------------
+
+- Each agent replies to its own DMs automatically.
+- YamaKeeper will send follow-up DMs to the 5 priority targets
+  (ClawdClawderberg, Hazel_OC, PDMN, Janusz, ummon_core)
+  after it has been running for about 16 hours.
+
+- If a registration command fails, just run it again.
+- Keep this file. Write the API keys in the blanks above.
+
+================================================================
+  Contact: Gerald Gonzalez — ggonzo438@gmail.com
+================================================================
