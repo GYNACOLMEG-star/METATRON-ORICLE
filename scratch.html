@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CA Lottery Scratch Tickets</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
+
+  body {
+    font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+    background: #f0f4ff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── HEADER ── */
+  header {
+    width: 100%;
+    background: linear-gradient(135deg, #003087 0%, #0055b3 100%);
+    color: white;
+    text-align: center;
+    padding: 18px 12px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.25);
+  }
+  header h1 { font-size: 2rem; letter-spacing: 1px; text-transform: uppercase; }
+  header p  { font-size: 1rem; opacity: 0.85; margin-top: 2px; }
+
+  #wallet-bar {
+    background: #ffd700;
+    color: #003087;
+    font-size: 1.3rem;
+    font-weight: 900;
+    text-align: center;
+    padding: 10px;
+    width: 100%;
+    letter-spacing: 1px;
+  }
+
+  /* ── TICKET SHOP ── */
+  #shop {
+    width: 100%;
+    max-width: 480px;
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .shop-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #003087;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .ticket-card {
+    background: white;
+    border-radius: 20px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 16px rgba(0,48,135,0.12);
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: border-color 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ticket-card:active { transform: scale(0.97); border-color: #ffd700; }
+
+  .ticket-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  .ticket-info { flex: 1; }
+  .ticket-name { font-size: 1.3rem; font-weight: 900; color: #111; }
+  .ticket-desc { font-size: 0.95rem; color: #555; margin-top: 3px; }
+  .ticket-price {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: white;
+    background: #003087;
+    border-radius: 12px;
+    padding: 8px 14px;
+    flex-shrink: 0;
+  }
+
+  /* ── SCRATCH SCREEN ── */
+  #scratch-screen {
+    display: none;
+    width: 100%;
+    max-width: 480px;
+    padding: 14px;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  #back-btn {
+    align-self: flex-start;
+    background: #003087;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ticket-wrapper {
+    width: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+    position: relative;
+    user-select: none;
+  }
+
+  /* Ticket background */
+  .ticket-bg {
+    width: 100%;
+    padding: 20px 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .ticket-header-bar {
+    text-align: center;
+    border-radius: 12px;
+    padding: 12px 8px;
+  }
+  .ticket-header-bar .t-name {
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: white;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+  }
+  .ticket-header-bar .t-sub {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.88);
+    margin-top: 2px;
+  }
+
+  .prize-pool-label {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+  }
+
+  /* Scratch zones */
+  .scratch-zones {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .scratch-zones.cols-3 { grid-template-columns: repeat(3,1fr); }
+  .scratch-zones.cols-2 { grid-template-columns: repeat(2,1fr); }
+
+  .zone-wrap {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .zone-value {
+    background: white;
+    border-radius: 12px;
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #111;
+    text-align: center;
+    line-height: 1.1;
+  }
+  .zone-value .prize-label {
+    font-size: 0.7rem;
+    color: #666;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+  .zone-value.winner {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    animation: pulse-win 0.6s ease;
+  }
+  @keyframes pulse-win {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+
+  /* Canvas scratch overlay per zone */
+  .scratch-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: 12px;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  /* Result banner */
+  #result-banner {
+    display: none;
+    width: 100%;
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+  }
+  #result-banner.win  { background: linear-gradient(135deg,#ffd700,#ffaa00); color: #003087; }
+  #result-banner.lose { background: #e8e8e8; color: #555; }
+
+  #scratch-hint {
+    font-size: 1.2rem;
+    color: #555;
+    text-align: center;
+    font-weight: 700;
+    padding: 4px 0;
+  }
+
+  /* New ticket button */
+  #new-ticket-btn {
+    display: none;
+    background: linear-gradient(135deg, #003087, #0055b3);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 16px 32px;
+    font-size: 1.4rem;
+    font-weight: 900;
+    cursor: pointer;
+    width: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── TICKET THEMES ── */
+  .theme-lucky7   { background: linear-gradient(160deg, #1a237e 0%, #283593 60%, #b71c1c 100%); }
+  .theme-goldmine { background: linear-gradient(160deg, #4e342e 0%, #6d4c41 60%, #ff8f00 100%); }
+  .theme-neon     { background: linear-gradient(160deg, #1b0036 0%, #6a0080 60%, #00e5ff 100%); }
+  .theme-clover   { background: linear-gradient(160deg, #1b5e20 0%, #2e7d32 60%, #a5d6a7 100%); }
+  .theme-diamond  { background: linear-gradient(160deg, #006064 0%, #00838f 60%, #e0f7fa 100%); }
+
+  .theme-lucky7   .ticket-header-bar { background: rgba(183,28,28,0.6); }
+  .theme-goldmine .ticket-header-bar { background: rgba(255,143,0,0.4); }
+  .theme-neon     .ticket-header-bar { background: rgba(106,0,128,0.6); }
+  .theme-clover   .ticket-header-bar { background: rgba(27,94,32,0.7); }
+  .theme-diamond  .ticket-header-bar { background: rgba(0,96,100,0.6); }
+
+  /* scratch material texture canvas color set per theme */
+  .scratch-material-lucky7   { background: #9e9e9e; }
+  .scratch-material-goldmine { background: #795548; }
+  .scratch-material-neon     { background: #4a148c; }
+  .scratch-material-clover   { background: #33691e; }
+  .scratch-material-diamond  { background: #006064; }
+
+  footer {
+    padding: 24px 16px;
+    font-size: 0.85rem;
+    color: #999;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎰 CA Lottery</h1>
+  <p>Scratch Ticket Simulator</p>
+</header>
+
+<div id="wallet-bar">💰 Balance: $<span id="balance">20.00</span></div>
+
+<!-- SHOP -->
+<div id="shop">
+  <p class="shop-title">Pick a Ticket</p>
+
+  <div class="ticket-card" onclick="buyTicket('lucky7')">
+    <div class="ticket-icon" style="background:#1a237e;">🍀</div>
+    <div class="ticket-info">
+      <div class="ticket-name">Lucky 7s</div>
+      <div class="ticket-desc">Match any 7 to win up to $77,777</div>
+    </div>
+    <div class="ticket-price">$1</div>
+  </div>
+
+  <div class="ticket-card" onclick="buyTicket('goldmine')">
+    <div class="ticket-icon" style="background:#4e342e;">⛏️</div>
+    <div class="ticket-info">
+      <div class="ticket-name">Gold Mine</div>
+      <div class="ticket-desc">Dig for gold — win up to $250,000</div>
+    </div>
+    <div class="ticket-price">$2</div>
+  </div>
+
+  <div class="ticket-card" onclick="buyTicket('neon')">
+    <div class="ticket-icon" style="background:#1b0036;">⚡</div>
+    <div class="ticket-info">
+      <div class="ticket-name">Neon Cash</div>
+      <div class="ticket-desc">Match symbols, win up to $500,000</div>
+    </div>
+    <div class="ticket-price">$5</div>
+  </div>
+
+  <div class="ticket-card" onclick="buyTicket('clover')">
+    <div class="ticket-icon" style="background:#1b5e20;">🍀</div>
+    <div class="ticket-info">
+      <div class="ticket-name">Lucky Clover</div>
+      <div class="ticket-desc">3-leaf = cash, 4-leaf = JACKPOT</div>
+    </div>
+    <div class="ticket-price">$5</div>
+  </div>
+
+  <div class="ticket-card" onclick="buyTicket('diamond')">
+    <div class="ticket-icon" style="background:#006064;">💎</div>
+    <div class="ticket-info">
+      <div class="ticket-name">Diamond Bucks</div>
+      <div class="ticket-desc">Premium — win up to $1,000,000</div>
+    </div>
+    <div class="ticket-price">$10</div>
+  </div>
+</div>
+
+<!-- SCRATCH SCREEN -->
+<div id="scratch-screen">
+  <button id="back-btn" onclick="goShop()">← Back</button>
+  <div id="ticket-container" class="ticket-wrapper">
+    <!-- dynamically filled -->
+  </div>
+  <div id="scratch-hint">☝️ Scratch the gray areas!</div>
+  <div id="result-banner"></div>
+  <button id="new-ticket-btn" onclick="goShop()">🎟 Get Another Ticket</button>
+</div>
+
+<footer>For entertainment only · Not affiliated with CA Lottery</footer>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const TICKETS = {
+  lucky7: {
+    name: 'Lucky 7s',
+    theme: 'theme-lucky7',
+    matColor: '#757575',
+    price: 1,
+    zones: 6,
+    cols: 3,
+    topPrize: '$77,777',
+    generate() {
+      // 3 winning numbers revealed, if any is 7 → win
+      const pool = [1,2,3,4,5,6,7,8,9];
+      const vals = Array.from({length:6}, () => pool[Math.floor(Math.random()*pool.length)]);
+      const winIdx = Math.random() < 0.30 ? Math.floor(Math.random()*6) : -1;
+      if (winIdx >= 0) vals[winIdx] = 7;
+      const prizes = ['$1','$2','$3','$5','$7','$14','$21','$77','$777'];
+      const winPrize = prizes[Math.floor(Math.random()*prizes.length)];
+      return {
+        zones: vals.map((v,i) => ({
+          display: v,
+          isWin: v === 7
+        })),
+        hasWin: vals.includes(7),
+        winPrize
+      };
+    }
+  },
+  goldmine: {
+    name: 'Gold Mine',
+    theme: 'theme-goldmine',
+    matColor: '#5d4037',
+    price: 2,
+    zones: 6,
+    cols: 3,
+    topPrize: '$250,000',
+    generate() {
+      const prizes = ['$2','$4','$10','$20','$50','$100','$500','$1,000','$10,000'];
+      const symbols = ['⛏️','💎','🪙','💰','🏆','❌'];
+      const winSym = '💎';
+      const hasWin = Math.random() < 0.28;
+      const zones = symbols.slice(1).concat('❌','❌').sort(()=>Math.random()-0.5).slice(0,6);
+      if (hasWin) zones[Math.floor(Math.random()*6)] = winSym;
+      const winPrize = prizes[Math.floor(Math.random()*prizes.length)];
+      return {
+        zones: zones.map(s => ({ display: s, isWin: s === winSym })),
+        hasWin,
+        winPrize
+      };
+    }
+  },
+  neon: {
+    name: 'Neon Cash',
+    theme: 'theme-neon',
+    matColor: '#4a148c',
+    price: 5,
+    zones: 6,
+    cols: 3,
+    topPrize: '$500,000',
+    generate() {
+      const prizes = ['$5','$10','$25','$50','$100','$500','$5,000','$50,000'];
+      const syms = ['⚡','🌟','💥','🔥','⭐','❌','❌'];
+      const winSym = '⚡';
+      const hasWin = Math.random() < 0.27;
+      const zones = Array.from({length:6}, () => syms[Math.floor(Math.random()*syms.length)]);
+      if (hasWin) { zones[0]=winSym; zones[1]=winSym; zones[2]=winSym; }
+      const winPrize = prizes[Math.floor(Math.random()*prizes.length)];
+      return {
+        zones: zones.map(s=>({ display:s, isWin: s===winSym })),
+        hasWin: hasWin && zones.filter(z=>z===winSym).length>=3,
+        winPrize
+      };
+    }
+  },
+  clover: {
+    name: 'Lucky Clover',
+    theme: 'theme-clover',
+    matColor: '#2e7d32',
+    price: 5,
+    zones: 4,
+    cols: 2,
+    topPrize: 'JACKPOT',
+    generate() {
+      const r = Math.random();
+      let hasWin = false, winPrize = '', zoneData;
+      if (r < 0.05) {
+        hasWin = true; winPrize = '🍀 JACKPOT! $500,000';
+        zoneData = ['🍀','🍀','🍀','🍀'];
+      } else if (r < 0.30) {
+        hasWin = true;
+        const prizes = ['$5','$10','$25','$50','$100','$500'];
+        winPrize = prizes[Math.floor(Math.random()*prizes.length)];
+        zoneData = ['☘️','☘️','☘️','🌿'];
+      } else {
+        zoneData = ['🌿','🌿','🌱','🌱'];
+      }
+      return {
+        zones: zoneData.map(s=>({ display:s, isWin:hasWin })),
+        hasWin,
+        winPrize
+      };
+    }
+  },
+  diamond: {
+    name: 'Diamond Bucks',
+    theme: 'theme-diamond',
+    matColor: '#00838f',
+    price: 10,
+    zones: 6,
+    cols: 3,
+    topPrize: '$1,000,000',
+    generate() {
+      const prizes = ['$10','$20','$50','$100','$500','$1,000','$10,000','$100,000','$1,000,000'];
+      const hasWin = Math.random() < 0.32;
+      const winPrize = prizes[Math.floor(Math.random()*prizes.length)];
+      const moneySyms = ['$$$','💵','💴','💸'];
+      const loseSyms = ['---','✗','💨','🎭'];
+      const zones = Array.from({length:6}, () => {
+        if (hasWin && Math.random()<0.5) return { display: moneySyms[Math.floor(Math.random()*moneySyms.length)], isWin:true };
+        return { display: loseSyms[Math.floor(Math.random()*loseSyms.length)], isWin:false };
+      });
+      const anyWin = zones.some(z=>z.isWin);
+      return { zones, hasWin: anyWin, winPrize };
+    }
+  }
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let balance = 20.00;
+let currentTicket = null;
+let currentResult = null;
+let scratchedZones = new Set();
+let canvases = [];
+let isDrawing = false;
+let resultShown = false;
+
+// ─── UI helpers ──────────────────────────────────────────────────────────────
+function fmt(n) { return n.toFixed(2); }
+function updateBalance() { document.getElementById('balance').textContent = fmt(balance); }
+
+function goShop() {
+  document.getElementById('shop').style.display = '';
+  document.getElementById('scratch-screen').style.display = 'none';
+  canvases = [];
+  scratchedZones.clear();
+  resultShown = false;
+  document.getElementById('result-banner').style.display = 'none';
+  document.getElementById('new-ticket-btn').style.display = 'none';
+  document.getElementById('scratch-hint').style.display = '';
+}
+
+// ─── BUY ─────────────────────────────────────────────────────────────────────
+function buyTicket(type) {
+  const t = TICKETS[type];
+  if (balance < t.price) {
+    alert(`Not enough funds! You need $${t.price}.`);
+    return;
+  }
+  balance -= t.price;
+  updateBalance();
+  currentTicket = t;
+  currentResult = t.generate();
+  renderTicket();
+  document.getElementById('shop').style.display = 'none';
+  document.getElementById('scratch-screen').style.display = 'flex';
+}
+
+// ─── RENDER TICKET ────────────────────────────────────────────────────────────
+function renderTicket() {
+  const t = currentTicket;
+  const r = currentResult;
+  const cols = t.cols;
+
+  const container = document.getElementById('ticket-container');
+  container.className = 'ticket-wrapper';
+
+  const bg = document.createElement('div');
+  bg.className = `ticket-bg ${t.theme}`;
+
+  // header
+  const hbar = document.createElement('div');
+  hbar.className = 'ticket-header-bar';
+  hbar.innerHTML = `<div class="t-name">${t.name}</div><div class="t-sub">Top Prize ${t.topPrize} · CA Lottery</div>`;
+  bg.appendChild(hbar);
+
+  const poolLabel = document.createElement('div');
+  poolLabel.className = 'prize-pool-label';
+  poolLabel.textContent = '✦ Scratch to reveal your prizes ✦';
+  bg.appendChild(poolLabel);
+
+  // zones grid
+  const grid = document.createElement('div');
+  grid.className = `scratch-zones cols-${cols}`;
+
+  r.zones.forEach((zone, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'zone-wrap';
+
+    const val = document.createElement('div');
+    val.className = 'zone-value';
+    val.id = `zone-val-${i}`;
+    const label = document.createElement('div');
+    label.className = 'prize-label';
+    label.textContent = 'scratch';
+    val.appendChild(document.createTextNode(String(zone.display)));
+    val.appendChild(label);
+    wrap.appendChild(val);
+
+    // canvas overlay
+    const cvs = document.createElement('canvas');
+    cvs.className = 'scratch-canvas';
+    cvs.id = `cvs-${i}`;
+    wrap.appendChild(cvs);
+    grid.appendChild(wrap);
+    canvases.push({canvas: cvs, index: i, zone});
+  });
+
+  bg.appendChild(grid);
+  container.innerHTML = '';
+  container.appendChild(bg);
+
+  // init canvases after DOM inserted
+  requestAnimationFrame(() => {
+    canvases.forEach(({canvas, index, zone}) => {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width  = rect.width;
+      canvas.height = rect.height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = t.matColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // add subtle texture label
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.font = `bold ${Math.round(canvas.height*0.22)}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('SCRATCH', canvas.width/2, canvas.height/2);
+      addScratchListeners(canvas, index, zone);
+    });
+  });
+}
+
+// ─── SCRATCH LOGIC ────────────────────────────────────────────────────────────
+function addScratchListeners(canvas, idx, zone) {
+  const erase = (x, y) => {
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x, y, 22, 0, Math.PI * 2);
+    ctx.fill();
+    checkReveal(canvas, idx, zone);
+  };
+
+  const getPos = (e, canvas) => {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  };
+
+  // Mouse
+  canvas.addEventListener('mousedown', e => { isDrawing = true; const p = getPos(e,canvas); erase(p.x,p.y); });
+  canvas.addEventListener('mousemove', e => { if (!isDrawing) return; const p = getPos(e,canvas); erase(p.x,p.y); });
+  window.addEventListener('mouseup', () => { isDrawing = false; });
+
+  // Touch
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); isDrawing = true; const p = getPos(e,canvas); erase(p.x,p.y); }, {passive:false});
+  canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!isDrawing) return; const p = getPos(e,canvas); erase(p.x,p.y); }, {passive:false});
+  canvas.addEventListener('touchend',   e => { isDrawing = false; });
+}
+
+function checkReveal(canvas, idx, zone) {
+  if (scratchedZones.has(idx)) return;
+  const ctx = canvas.getContext('2d');
+  const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+  let transparent = 0;
+  for (let i = 3; i < data.length; i += 4) if (data[i] < 128) transparent++;
+  const pct = transparent / (data.length / 4);
+  if (pct > 0.50) {
+    scratchedZones.add(idx);
+    canvas.style.pointerEvents = 'none';
+    // highlight winner zone
+    if (zone.isWin) {
+      const valEl = document.getElementById(`zone-val-${idx}`);
+      if (valEl) valEl.classList.add('winner');
+    }
+    checkAllScratched();
+  }
+}
+
+function checkAllScratched() {
+  if (resultShown) return;
+  if (scratchedZones.size < currentResult.zones.length) return;
+  resultShown = true;
+  showResult();
+}
+
+// reveal all remaining zones button
+function revealAll() {
+  canvases.forEach(({canvas, index, zone}) => {
+    if (scratchedZones.has(index)) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    scratchedZones.add(index);
+    canvas.style.pointerEvents = 'none';
+    if (zone.isWin) {
+      const valEl = document.getElementById(`zone-val-${index}`);
+      if (valEl) valEl.classList.add('winner');
+    }
+  });
+  if (!resultShown) { resultShown = true; showResult(); }
+}
+
+function showResult() {
+  const r = currentResult;
+  const banner = document.getElementById('result-banner');
+  const hint = document.getElementById('scratch-hint');
+  hint.style.display = 'none';
+
+  if (r.hasWin) {
+    banner.className = 'win';
+    banner.innerHTML = `🏆 WINNER!<br><span style="font-size:1.3rem">${r.winPrize}</span>`;
+    // add winnings to balance (parse number)
+    const amt = parseFloat(r.winPrize.replace(/[$,]/g,'')) || 0;
+    balance += amt;
+    updateBalance();
+  } else {
+    banner.className = 'lose';
+    banner.innerHTML = `😔 Not a winner<br><span style="font-size:1rem">Better luck next time!</span>`;
+  }
+  banner.style.display = 'block';
+  document.getElementById('new-ticket-btn').style.display = 'block';
+
+  // add tap-to-reveal hint if not all scratched
+  const revBtn = document.getElementById('back-btn');
+  revBtn.textContent = '← Back';
+}
+
+// Tap the ticket header to auto-reveal
+document.addEventListener('DOMContentLoaded', () => {
+  // double-tap ticket to reveal all
+  let lastTap = 0;
+  document.getElementById('ticket-container').addEventListener('touchend', e => {
+    const now = Date.now();
+    if (now - lastTap < 300 && !resultShown) { revealAll(); }
+    lastTap = now;
+  });
+});
+</script>
+</body>
+</html>
