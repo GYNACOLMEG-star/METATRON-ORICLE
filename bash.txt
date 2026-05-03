@@ -1,0 +1,35 @@
+
+bash
+
+
+# 1. Create the file with the data
+nano fleet_manifest.json
+
+# 2. Add the file to your "to-do" list
+git add fleet_manifest.json
+
+# 3. Write a note about what this is
+git commit -m "Update: Dharmapala Fleet initialization and metaphor index"
+
+# 4. Send it to the cloud
+git push origin ma
+in
+
+
+
+
+
+cat << 'EOF' > fleet_manifest.json
+[
+  {
+    "file_name": "metatron_oracle_fleet.json",
+    "status": "deployed",
+    "fleet_count": 10
+  }
+]
+EOF
+
+
+
+
+
